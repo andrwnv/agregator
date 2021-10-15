@@ -7,6 +7,7 @@ export class UserController {
     @Client({
         transport: Transport.TCP,
         options: {
+            host: 'user_service',
             port: 3010
         }
     })
