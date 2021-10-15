@@ -7,6 +7,8 @@ services:
     volumes:
       - "./user-service:/src/app"
     working_dir: "/src/app"
+    ports:
+      - "3010:3010"
     command: npm run start:dev
 
   api_gateway:
@@ -16,6 +18,5 @@ services:
       - "./api-gateway:/src/app"
     working_dir: "/src/app"
     ports:
-      - "3010:3010"
       - "8000:8000"
     command: npm run start:dev
