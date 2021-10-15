@@ -1,0 +1,5 @@
+.gitignore
+.idea
+.git
+docker-compose.yml
+node_modules

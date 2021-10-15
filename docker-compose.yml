@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  user_service:
+    build: ./user-service
+    container_name: user_service
+    volumes:
+      - "./user-service:/src/app"
+    working_dir: "/src/app"
+    command: npm run start:dev
+
+  api_gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    volumes:
+      - "./api-gateway:/src/app"
+    working_dir: "/src/app"
+    ports:
+      - "3010:3010"
+      - "8000:8000"
+    command: npm run start:dev
