@@ -6,17 +6,33 @@ services:
     container_name: user_service
     volumes:
       - "./user-service:/src/app"
-    working_dir: "/src/app"
+    hostname: user_service
+    networks:
+      - backend
+    expose:
+      - "3010"
     ports:
       - "3010:3010"
+    working_dir: "/src/app"
     command: npm run start:dev
 
   api_gateway:
     build: ./api-gateway
     container_name: api_gateway
+    hostname: api_gateway
+    depends_on:
+      - user_service
+    networks:
+      - backend
     volumes:
       - "./api-gateway:/src/app"
     working_dir: "/src/app"
+    expose:
+      - "8000"
     ports:
       - "8000:8000"
     command: npm run start:dev
+
+networks:
+  backend:
+    driver: bridge
