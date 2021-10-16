@@ -1,7 +1,10 @@
 # Event Aggregator
 
 ## Dependencies
-Event Aggregator requires [Docker](https://www.docker.com/).
+Event Aggregator requires:
+* [NodeJS](https://nodejs.org/)
+* [Nest.js CLI](https://docs.nestjs.com/cli/overview)
+* [Docker](https://www.docker.com/) for deploy.
 
 ## Start
 Runs the app
