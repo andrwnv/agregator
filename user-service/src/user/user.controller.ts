@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Res } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './user.dto';
+import { CreateUserDto, UserDto } from './user.dto';
+import { Response } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -8,12 +9,34 @@ export class UserController {
     }
 
     @Get()
-    public async getAll() {
-        return await this.userService.getAll();
+    @HttpCode(HttpStatus.OK)
+    public async getAll(@Res() res: Response) {
+        try {
+            const users: UserDto[] = await this.userService.getAll();
+
+            res.json({
+                success: true,
+                data: users
+            });
+        } catch(_) {
+            throw new HttpException('INTERNAL SERVER ERROR',
+                HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Post()
-    public async create(@Body() dto: CreateUserDto) {
-        return await this.userService.createUser(dto);
+    @HttpCode(HttpStatus.CREATED)
+    public async create(@Body() dto: CreateUserDto, @Res() res: Response) {
+        try {
+            const user: UserDto = await this.userService.createUser(dto);
+
+            res.json({
+                success: true,
+                data: user
+            });
+        } catch(_) {
+            throw new HttpException('USER DATA ALREADY EXISTS',
+                HttpStatus.CONFLICT);
+        }
     }
 }
