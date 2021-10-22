@@ -23,9 +23,9 @@ services:
     volumes:
       - ./user-service/container/data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=host
+      - POSTGRES_DB=users
       - POSTGRES_USER=postgres
-      - POSTGRES_HOST_AUTH_METHOD=trust\
+      - POSTGRES_HOST_AUTH_METHOD=trust
     ports:
       - "5000:5432"
     networks:
@@ -38,7 +38,6 @@ services:
     build: ./nginx
     networks:
       - backend
-      - user_service_db
     volumes:
       - "app_www:/usr/share/nginx/www"
     ports:
