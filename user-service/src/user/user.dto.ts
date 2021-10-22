@@ -1,5 +1,5 @@
 import { ApiModelProperty } from '@nestjs/swagger/dist/decorators/api-model-property.decorator';
-import { IsEmail, IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { UserEntity } from '../model/user.entity';
 
 export class CreateUserDto {
@@ -55,6 +55,9 @@ export class UserDto {
     @IsEmail()
     eMail: string;
 
+    @ApiModelProperty({required: true})
+    password: string;
+
     public static fromEntity(user: UserEntity): UserDto {
         const dto = new UserDto();
 
@@ -63,32 +66,25 @@ export class UserDto {
         dto.lastName = user.lastName;
         dto.username = user.username;
         dto.eMail = user.eMail;
+        dto.password = user.password;
 
         return dto;
     }
 }
 
-export class UserDtoForAuth {
-    @ApiModelProperty({ required: true })
-    @IsUUID()
-    id: string;
-
-    @ApiModelProperty({ required: true })
-    @IsString()
-    username: string;
-
+export class LoginUserDto {
     @ApiModelProperty({required: true})
+    @IsNotEmpty()
     @IsEmail()
     eMail: string;
 
     @ApiModelProperty({required: true})
+    @IsNotEmpty()
     password: string;
 
-    public static fromEntity(user: UserEntity): UserDtoForAuth {
-        const dto = new UserDtoForAuth();
+    public static fromEntity(user: UserEntity): LoginUserDto {
+        const dto = new LoginUserDto();
 
-        dto.id = user.id;
-        dto.username = user.username;
         dto.eMail = user.eMail;
         dto.password = user.password;
 
