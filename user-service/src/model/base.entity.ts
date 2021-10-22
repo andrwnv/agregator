@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Generated, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 export abstract class BaseEntity {
     @PrimaryGeneratedColumn('uuid')
+    @Generated('uuid')
     id: string;
 
     @Column({ type: 'boolean', default: true })
@@ -15,7 +16,4 @@ export abstract class BaseEntity {
 
     @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     lastChangedDateTime: Date;
-
-    @Column({ type: 'varchar', length: 300, nullable: true })
-    internalComment: string;
 }
