@@ -1,6 +1,8 @@
-import { Controller, Post, Body, HttpStatus, HttpCode, HttpException } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpStatus, HttpCode, HttpException, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from '../user/user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { JwtPayload } from '../user/interfaces/jwt-payload.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -15,5 +17,11 @@ export class AuthController {
             throw new HttpException('UNAUTHORIZED', HttpStatus.UNAUTHORIZED)
 
         return result;
+    }
+
+    @Get('who_am_i')
+    @UseGuards(AuthGuard())
+    public async whoAmI(@Req() req): Promise<JwtPayload> {
+        return req.user;
     }
 }

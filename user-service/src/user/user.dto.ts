@@ -91,3 +91,37 @@ export class LoginUserDto {
         return dto;
     }
 }
+
+export class AuthorizedUserDto {
+    @ApiModelProperty({ required: true })
+    @IsUUID()
+    id: string;
+
+    @ApiModelProperty({ required: true })
+    @IsString()
+    firstName: string;
+
+    @ApiModelProperty({ required: true })
+    @IsString()
+    lastName: string;
+
+    @ApiModelProperty({ required: true })
+    @IsString()
+    username: string;
+
+    @ApiModelProperty({required: true})
+    @IsEmail()
+    eMail: string;
+
+    public static from(user: UserEntity | UserDto): AuthorizedUserDto {
+        const dto = new AuthorizedUserDto();
+
+        dto.id = user.id;
+        dto.firstName = user.firstName;
+        dto.lastName = user.lastName;
+        dto.username = user.username;
+        dto.eMail = user.eMail;
+
+        return dto;
+    }
+}
