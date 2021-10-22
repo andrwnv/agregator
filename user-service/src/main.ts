@@ -16,6 +16,8 @@ async function bootstrap() {
         SwaggerModule.setup('api', app, doc);
     }
 
+    app.enableCors();
+
     await app.listen(3010, () => {
         console.log("User service listening on 3010");
     });
