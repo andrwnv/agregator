@@ -2,8 +2,6 @@ import { ApiModelProperty } from '@nestjs/swagger/dist/decorators/api-model-prop
 import { IsEmail, IsString, IsUUID } from 'class-validator';
 import { UserEntity } from '../model/user.entity';
 
-
-
 export class CreateUserDto {
     @ApiModelProperty({ required: true })
     @IsString()
@@ -65,6 +63,34 @@ export class UserDto {
         dto.lastName = user.lastName;
         dto.username = user.username;
         dto.eMail = user.eMail;
+
+        return dto;
+    }
+}
+
+export class UserDtoForAuth {
+    @ApiModelProperty({ required: true })
+    @IsUUID()
+    id: string;
+
+    @ApiModelProperty({ required: true })
+    @IsString()
+    username: string;
+
+    @ApiModelProperty({required: true})
+    @IsEmail()
+    eMail: string;
+
+    @ApiModelProperty({required: true})
+    password: string;
+
+    public static fromEntity(user: UserEntity): UserDtoForAuth {
+        const dto = new UserDtoForAuth();
+
+        dto.id = user.id;
+        dto.username = user.username;
+        dto.eMail = user.eMail;
+        dto.password = user.password;
 
         return dto;
     }
