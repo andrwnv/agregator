@@ -11,13 +11,19 @@ export class UserService {
     ) {
     }
 
+    public async getAll(): Promise<UserDto[]> {
+        return await this.repo.find()
+                         .then(users => users.map((user: UserEntity) => UserDto.fromEntity(user)));
+    }
+
     public async createUser(dto: CreateUserDto): Promise<UserDto> {
         return await this.repo.save(this.repo.manager.create(UserEntity, CreateUserDto.toObject(dto)))
                          .then(user => UserDto.fromEntity(user));
     }
 
-    public async getAll(): Promise<UserDto[]> {
-        return await this.repo.find()
-                         .then(users => users.map((user: UserEntity) => UserDto.fromEntity(user)));
+    public async deleteUser(id: string): Promise<boolean> {
+        return await this.repo.delete({
+            id: id
+        }).then(() => true);
     }
 }

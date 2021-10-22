@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UserDto } from './user.dto';
 import { Response } from 'express';
@@ -43,6 +43,21 @@ export class UserController {
                 data: {},
                 error: err.toString(),
             }, HttpStatus.CONFLICT);
+        }
+    }
+
+    @Delete(':id')
+    @HttpCode(HttpStatus.OK)
+    public async delete(@Param() params) {
+        try {
+            await this.userService.deleteUser(params.id);
+
+        } catch(err) {
+            throw new HttpException({
+                success: false,
+                data: [],
+                error: err.toString(),
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
