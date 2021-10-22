@@ -13,8 +13,23 @@ services:
       - "3010"
     ports:
       - "3010:3010"
+    depends_on:
+      - user_service_db
     working_dir: "/src/app"
     command: npm run start:dev
+
+  user_service_db:
+    image: postgres
+    volumes:
+      - ./user-service/container/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=host
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust\
+    ports:
+      - "5000:5432"
+    networks:
+      - backend
 
   nginx_api_gateway:
     container_name: nginx_api_gateway
@@ -23,6 +38,7 @@ services:
     build: ./nginx
     networks:
       - backend
+      - user_service_db
     volumes:
       - "app_www:/usr/share/nginx/www"
     ports:
