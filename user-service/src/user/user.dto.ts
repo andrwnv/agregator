@@ -1,12 +1,17 @@
 import { ApiModelProperty } from '@nestjs/swagger/dist/decorators/api-model-property.decorator';
-import { IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsString, IsUUID } from 'class-validator';
 import { UserEntity } from '../model/user.entity';
-import { User } from '../decorator/user.decorator';
 
-export class UserDTO implements Readonly<UserDTO> {
+
+
+export class CreateUserDto {
     @ApiModelProperty({ required: true })
-    @IsUUID()
-    id: string;
+    @IsString()
+    firstName: string;
+
+    @ApiModelProperty({ required: true })
+    @IsString()
+    lastName: string;
 
     @ApiModelProperty({ required: true })
     @IsString()
@@ -16,36 +21,51 @@ export class UserDTO implements Readonly<UserDTO> {
     @IsString()
     password: string;
 
-    public static from(dto: Partial<UserDTO>): UserDTO {
-        const userDTO = new UserDTO();
-        userDTO.id = dto.id;
-        userDTO.username = dto.username;
-        userDTO.password = dto.password;
+    @ApiModelProperty({required: true})
+    @IsEmail()
+    eMail: string;
 
-        return userDTO;
+    public static toObject(dto: CreateUserDto) {
+        return {
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            username: dto.username,
+            password: dto.password,
+            eMail: dto.eMail
+        };
     }
+}
 
-    public static fromEntity(entity: UserEntity): UserDTO {
-        return this.from({
-            id: entity.id,
-            username: entity.username,
-            password: entity.password,
-        });
-    }
+export class UserDto {
+    @ApiModelProperty({ required: true })
+    @IsUUID()
+    id: string;
 
-    public static toEntity(dto: Partial<UserDTO>, user: User): UserEntity {
-        const userEntity = new UserEntity();
+    @ApiModelProperty({ required: true })
+    @IsString()
+    firstName: string;
 
-        userEntity.createDateTime = new Date();
-        userEntity.lastChangedDateTime = new Date();
+    @ApiModelProperty({ required: true })
+    @IsString()
+    lastName: string;
 
-        userEntity.username = user.username;
-        userEntity.firstName = user.firstName;
-        userEntity.lastName = user.lastName;
-        userEntity.eMail = user.eMail;
-        userEntity.password = user.password;
-        userEntity.age = user.age;
+    @ApiModelProperty({ required: true })
+    @IsString()
+    username: string;
 
-        return userEntity;
+    @ApiModelProperty({required: true})
+    @IsEmail()
+    eMail: string;
+
+    public static fromEntity(user: UserEntity): UserDto {
+        const dto = new UserDto();
+
+        dto.id = user.id;
+        dto.firstName = user.firstName;
+        dto.lastName = user.lastName;
+        dto.username = user.username;
+        dto.eMail = user.eMail;
+
+        return dto;
     }
 }
