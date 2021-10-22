@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto, UserDto } from './user.dto';
+import { UserDtoWithoutPass, CreateUserDto, UserDto } from './user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../model/user.entity';
 import { Repository } from 'typeorm';
@@ -16,9 +16,9 @@ export class UserService {
                          .then(users => users.map((user: UserEntity) => UserDto.fromEntity(user)));
     }
 
-    public async createUser(dto: CreateUserDto): Promise<UserDto> {
+    public async createUser(dto: CreateUserDto): Promise<UserDtoWithoutPass> {
         return await this.repo.save(this.repo.manager.create(UserEntity, CreateUserDto.toObject(dto)))
-                         .then(user => UserDto.fromEntity(user));
+                         .then(user => UserDtoWithoutPass.from(UserDto.fromEntity(user)));
     }
 
     public async deleteUser(id: string): Promise<boolean> {

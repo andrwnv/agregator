@@ -18,7 +18,7 @@ import { AuthController } from './auth.controller';
         JwtModule.register({
             secret: configService.getValue('SECRET_KEY'),
             signOptions: {
-                expiresIn: '30d'
+                expiresIn: configService.getValue('EXPIRES_TOKEN_IN')
             }
         })
     ],

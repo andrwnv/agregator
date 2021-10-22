@@ -12,9 +12,11 @@ import {
     Res,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, UserDto } from './user.dto';
+import { UserDtoWithoutPass, CreateUserDto, UserDto } from './user.dto';
 import { Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user')
 @Controller('user')
 export class UserController {
     constructor(private userService: UserService) {
@@ -43,11 +45,11 @@ export class UserController {
         }
     }
 
-    @Post()
+    @Post('/create')
     @HttpCode(HttpStatus.CREATED)
     public async create(@Body() dto: CreateUserDto, @Res() res: Response) {
         try {
-            const user: UserDto = await this.userService.createUser(dto);
+            const user: UserDtoWithoutPass = await this.userService.createUser(dto);
             this.logger.log(`{POST} -> User created ${user.id}`);
 
             res.json({

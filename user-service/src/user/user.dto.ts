@@ -92,7 +92,7 @@ export class LoginUserDto {
     }
 }
 
-export class AuthorizedUserDto {
+export class UserDtoWithoutPass {
     @ApiModelProperty({ required: true })
     @IsUUID()
     id: string;
@@ -113,8 +113,8 @@ export class AuthorizedUserDto {
     @IsEmail()
     eMail: string;
 
-    public static from(user: UserEntity | UserDto): AuthorizedUserDto {
-        const dto = new AuthorizedUserDto();
+    public static from(user: UserEntity | UserDto): UserDtoWithoutPass {
+        const dto = new UserDtoWithoutPass();
 
         dto.id = user.id;
         dto.firstName = user.firstName;
