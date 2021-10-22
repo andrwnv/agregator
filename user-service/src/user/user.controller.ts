@@ -16,11 +16,14 @@ export class UserController {
 
             res.json({
                 success: true,
-                data: users
+                data: users,
             });
-        } catch(_) {
-            throw new HttpException('INTERNAL SERVER ERROR',
-                HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch(err) {
+            throw new HttpException({
+                success: false,
+                data: [],
+                error: err.toString(),
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -32,11 +35,14 @@ export class UserController {
 
             res.json({
                 success: true,
-                data: user
+                data: user,
             });
-        } catch(_) {
-            throw new HttpException('USER DATA ALREADY EXISTS',
-                HttpStatus.CONFLICT);
+        } catch(err) {
+            throw new HttpException({
+                success: false,
+                data: {},
+                error: err.toString(),
+            }, HttpStatus.CONFLICT);
         }
     }
 }
