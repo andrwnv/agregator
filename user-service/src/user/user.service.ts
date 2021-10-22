@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto, UserDto } from './user.dto';
+import { CreateUserDto, UserDto, UserDtoForAuth } from './user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../model/user.entity';
 import { Repository } from 'typeorm';
@@ -25,5 +25,11 @@ export class UserService {
         return await this.repo.delete({
             id: id
         }).then(() => true);
+    }
+
+    public async getUserByEmail(email: string): Promise<UserDtoForAuth> {
+        return await this.repo.findOne({
+            eMail: email
+        }).then(user => UserDtoForAuth.fromEntity(user));
     }
 }
