@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { configService } from './config/config.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -19,7 +20,7 @@ async function bootstrap() {
     app.enableCors();
 
     await app.listen(3010, () => {
-        console.log("User service listening on 3010");
+        new Logger(AppModule.name).log(`User service listening on 3010`);
     });
 }
 
