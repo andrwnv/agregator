@@ -31,20 +31,28 @@ services:
     networks:
       - backend
 
-  events_service:
-    build: ./events-service
-    container_name: events_service
-    volumes:
-      - "./events-service:/src/app"
-    hostname: events_service
-    networks:
-      - backend
-    expose:
-      - "3020"
+  rabbitmq_service:
+    image: "rabbitmq:3-management"
     ports:
-      - "3020:3020"
-    working_dir: "/src/app"
-    command: npm run start:dev
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - 'rabbitmq_data:/data'
+
+#  events_service:
+#    build: ./events-service
+#    container_name: events_service
+#    volumes:
+#      - "./events-service:/src/app"
+#    hostname: events_service
+#    networks:
+#      - backend
+#    expose:
+#      - "3020"
+#    ports:
+#      - "3020:3020"
+#    working_dir: "/src/app"
+#    command: npm run start:dev
 
   nginx_api_gateway:
     container_name: nginx_api_gateway
@@ -67,3 +75,4 @@ networks:
 volumes:
   app_www:
     external: true
+  rabbitmq_data:
