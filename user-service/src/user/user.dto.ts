@@ -34,6 +34,29 @@ export class CreateUserDto {
     }
 }
 
+export class UpdateUserDto {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    firstName: string;
+
+    @IsString()
+    lastName: string;
+
+    @IsString()
+    password: string;
+
+    public static toObject(dto: UpdateUserDto) {
+        return {
+            id: dto.id,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            password: dto.password,
+        };
+    }
+}
+
 export class UserDto {
     @ApiModelProperty({ required: true })
     @IsUUID()

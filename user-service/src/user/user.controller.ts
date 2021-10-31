@@ -7,12 +7,13 @@ import {
     HttpException,
     HttpStatus,
     Logger,
-    Param,
+    Param, Patch,
     Post,
     Res,
 } from '@nestjs/common';
+
 import { UserService } from './user.service';
-import { UserDtoWithoutPass, CreateUserDto, UserDto } from './user.dto';
+import { UserDtoWithoutPass, CreateUserDto, UserDto, UpdateUserDto } from './user.dto';
 import { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -77,6 +78,27 @@ export class UserController {
             throw new HttpException({
                 success: false,
                 data: [],
+                error: err.toString(),
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Patch('/update')
+    @HttpCode(HttpStatus.OK)
+    public async update(@Body() dto: UpdateUserDto, @Res() res: Response) {
+        try {
+            const updatedUser = await this.userService.updateUser(dto);
+            this.logger.log(`{PATCH} -> Update user ${dto.id}`);
+
+            res.json({
+                success: true,
+                data: updatedUser,
+            });
+        } catch(err) {
+            this.logger.warn(`{PATCH} -> Cant update user ${dto.id}`);
+            throw new HttpException({
+                success: false,
+                data: { },
                 error: err.toString(),
             }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
