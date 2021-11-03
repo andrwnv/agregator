@@ -15,8 +15,37 @@ services:
       - "3010:3010"
     depends_on:
       - user_service_db
+      - rabbitmq_service
     working_dir: "/src/app"
     command: npm run start:dev
+
+  mailer_service:
+    build: ./mailer-service
+    container_name: mailer_service
+    volumes:
+      - "./mailer_service:/src/app"
+    hostname: mailer_service
+    networks:
+      - backend
+    depends_on:
+      - rabbitmq_service
+    working_dir: "/src/app"
+    command: npm run start:dev
+
+  #  events_service:
+  #    build: ./events-service
+  #    container_name: events_service
+  #    volumes:
+  #      - "./events-service:/src/app"
+  #    hostname: events_service
+  #    networks:
+  #      - backend
+  #    expose:
+  #      - "3020"
+  #    ports:
+  #      - "3020:3020"
+  #    working_dir: "/src/app"
+  #    command: npm run start:dev
 
   user_service_db:
     image: postgres
@@ -38,21 +67,6 @@ services:
       - "15672:15672"
     volumes:
       - 'rabbitmq_data:/data'
-
-#  events_service:
-#    build: ./events-service
-#    container_name: events_service
-#    volumes:
-#      - "./events-service:/src/app"
-#    hostname: events_service
-#    networks:
-#      - backend
-#    expose:
-#      - "3020"
-#    ports:
-#      - "3020:3020"
-#    working_dir: "/src/app"
-#    command: npm run start:dev
 
   nginx_api_gateway:
     container_name: nginx_api_gateway
