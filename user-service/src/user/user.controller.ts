@@ -25,6 +25,28 @@ export class UserController {
 
     private readonly logger = new Logger(UserController.name);
 
+    @Get('try_rmq')
+    @HttpCode(HttpStatus.OK)
+    public async sendConfirmTest(@Res() res: Response) {
+        try {
+            await this.userService.sendConfirmEmail('1', 'glazynovand@andrwnv.ru');
+
+            res.json({
+                success: true,
+                data: 'Confirmation email sent!',
+            });
+        } catch(err) {
+            this.logger.error('{GET} -> Cant sent confirmation email', err);
+            throw new HttpException({
+                success: false,
+                data: 'Cant sent confirmation email!',
+                error: err.toString(),
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return 'Message sent to the queue!';
+    }
+
     @Get()
     @HttpCode(HttpStatus.OK)
     public async getAll(@Res() res: Response) {
@@ -52,6 +74,9 @@ export class UserController {
         try {
             const user: UserDtoWithoutPass = await this.userService.createUser(dto);
             this.logger.log(`{POST} -> User created ${user.id}`);
+
+            await this.userService.sendConfirmEmail(user.id, user.eMail);
+            this.logger.log(`{EVENT} -> Confirmation email sent to ${user.id}`);
 
             res.json({
                 success: true,

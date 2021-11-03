@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Transport } from '@nestjs/microservices';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
@@ -49,6 +50,17 @@ class ConfigService {
             },
         };
     }
+
+    public getMailerPublisherConfig(): any {
+        return {
+            name: 'mailer-rmq-publisher-provider',
+            transport: Transport.RMQ,
+            options: {
+                urls: [`amqp://${this.getValue('MAILER_AMQP_HOST')}:${this.getValue('MAILER_AMQP_PORT')}`],
+                queue: `${this.getValue('MAILER_AMQP_QUEUE_NAME')}`
+            }
+        };
+    }
 }
 
 const configService = new ConfigService(process.env).checkValueExists([
@@ -57,6 +69,10 @@ const configService = new ConfigService(process.env).checkValueExists([
     'POSTGRES_USER',
     'POSTGRES_PASSWORD',
     'POSTGRES_DATABASE',
+
+    'MAILER_AMQP_HOST',
+    'MAILER_AMQP_PORT',
+    'MAILER_AMQP_QUEUE_NAME',
 ]);
 
 export { configService };

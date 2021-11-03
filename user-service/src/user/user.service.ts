@@ -3,12 +3,26 @@ import { UserDtoWithoutPass, CreateUserDto, UserDto, UpdateUserDto } from './use
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../model/user.entity';
 import { Repository } from 'typeorm';
+import { MailerRmqService } from '../mailer-rmq-publisher/mailer-rmq.service';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(UserEntity) private readonly repo: Repository<UserEntity>,
+        private readonly mailerPublisher: MailerRmqService
     ) {
+    }
+
+    public async sendConfirmEmail(id: string, email: string): Promise<void> {
+        // const pendingOperations = Array.from(new Array(100)).map((_, index) => {
+                this.mailerPublisher.emitEvent('mailer:confirm_email', {
+                    uuid: id,
+                    email: email
+                })
+            // }
+        // );
+
+        // await Promise.all(pendingOperations);
     }
 
     public async getAll(): Promise<UserDto[]> {
