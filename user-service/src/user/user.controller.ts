@@ -1,21 +1,18 @@
 import {
-    Body,
     Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpException,
-    HttpStatus,
+    Body, Res, Param,
+    HttpCode, HttpStatus,
     Logger,
-    Param, Patch,
-    Post,
-    Res,
+    Post, Patch, Delete, Get
 } from '@nestjs/common';
 
-import { UserService } from './user.service';
-import { UserDtoWithoutPass, CreateUserDto, UserDto, UpdateUserDto } from './user.dto';
 import { Response } from 'express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
+
+import { UserService } from './user.service';
+import { CreateUserDto, UpdateUserDto } from './dto/user-events.dto';
+import { BaseUserDto } from './dto/user-info.dto';
+
 
 @ApiTags('user')
 @Controller('user')
@@ -25,107 +22,49 @@ export class UserController {
 
     private readonly logger = new Logger(UserController.name);
 
-    @Get('try_rmq')
+    @Get('/:id')
     @HttpCode(HttpStatus.OK)
-    public async sendConfirmTest(@Res() res: Response) {
-        try {
-            await this.userService.sendConfirmEmail('1', 'glazynovand@andrwnv.ru');
+    @ApiParam({name: 'id', required: true, schema: {type: 'string'}})
+    public async getByUUID(@Param('id') id: string, @Res() res: Response): Promise<void> {
+        this.logger.log(`{GET} -> User ${id}`);
 
-            res.json({
-                success: true,
-                data: 'Confirmation email sent!',
-            });
-        } catch(err) {
-            this.logger.error('{GET} -> Cant sent confirmation email', err);
-            throw new HttpException({
-                success: false,
-                data: 'Cant sent confirmation email!',
-                error: err.toString(),
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        const user = await this.userService.getUser(id);
 
-        return 'Message sent to the queue!';
-    }
-
-    @Get()
-    @HttpCode(HttpStatus.OK)
-    public async getAll(@Res() res: Response) {
-        try {
-            const users: UserDto[] = await this.userService.getAll();
-            this.logger.log('{GET} -> All users received');
-
-            res.json({
-                success: true,
-                data: users,
-            });
-        } catch(err) {
-            this.logger.warn('{GET} -> Cant receive all users');
-            throw new HttpException({
-                success: false,
-                data: [],
-                error: err.toString(),
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        res.json({
+            success: true,
+            data: user,
+        });
     }
 
     @Post('/create')
     @HttpCode(HttpStatus.CREATED)
-    public async create(@Body() dto: CreateUserDto, @Res() res: Response) {
-        try {
-            const user: UserDtoWithoutPass = await this.userService.createUser(dto);
-            this.logger.log(`{POST} -> User created ${user.id}`);
+    public async create(@Body() dto: CreateUserDto, @Res() res: Response): Promise<void> {
+        const user: BaseUserDto = await this.userService.createUser(dto);
+        this.logger.log(`{POST} -> Created user ${user.id}`);
 
-            await this.userService.sendConfirmEmail(user.id, user.eMail);
-            this.logger.log(`{EVENT} -> Confirmation email sent to ${user.id}`);
-
-            res.json({
-                success: true,
-                data: user,
-            });
-        } catch(err) {
-            this.logger.warn('{POST} -> Cant create user');
-            throw new HttpException({
-                success: false,
-                data: {},
-                error: err.toString(),
-            }, HttpStatus.CONFLICT);
-        }
-    }
-
-    @Delete(':id')
-    @HttpCode(HttpStatus.OK)
-    public async delete(@Param() params) {
-        try {
-            await this.userService.deleteUser(params.id);
-            this.logger.log(`{DELETE} -> Destroyed ${params.id}`);
-        } catch(err) {
-            this.logger.warn(`{DELETE} -> Cant destroy ${params.id}`);
-            throw new HttpException({
-                success: false,
-                data: [],
-                error: err.toString(),
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        res.json({
+            success: true,
+            data: user,
+        });
     }
 
     @Patch('/update')
     @HttpCode(HttpStatus.OK)
-    public async update(@Body() dto: UpdateUserDto, @Res() res: Response) {
-        try {
-            const updatedUser = await this.userService.updateUser(dto);
-            this.logger.log(`{PATCH} -> Update user ${dto.id}`);
+    public async update(@Body() dto: UpdateUserDto, @Res() res: Response): Promise<void> {
+        const updatedUser = await this.userService.updateUser(dto);
+        this.logger.log(`{PATCH} -> Updated user ${dto.id}`);
 
-            res.json({
-                success: true,
-                data: updatedUser,
-            });
-        } catch(err) {
-            this.logger.warn(`{PATCH} -> Cant update user ${dto.id}`);
-            throw new HttpException({
-                success: false,
-                data: { },
-                error: err.toString(),
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        res.json({
+            success: true,
+            data: updatedUser,
+        });
+    }
+
+    @Delete('/delete/:id')
+    @HttpCode(HttpStatus.OK)
+    @ApiParam({name: 'id', required: true, schema: {type: 'string'}})
+    public async delete(@Param('id') id: string): Promise<void> {
+        await this.userService.deleteUser(id);
+        this.logger.log(`{DELETE} -> Deleted user ${id}`);
     }
 }

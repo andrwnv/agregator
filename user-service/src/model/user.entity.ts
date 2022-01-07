@@ -1,7 +1,9 @@
 import { Column, Entity, Index } from 'typeorm';
+
 import { BaseEntity } from './base.entity';
 
-@Entity({name: 'user'})
+
+@Entity({name: 'user-entity'})
 export class UserEntity extends BaseEntity {
     @Column({type: 'text', nullable: false})
     username!: string;
@@ -12,13 +14,13 @@ export class UserEntity extends BaseEntity {
     @Column({ type: 'text', nullable: false })
     lastName!: string;
 
-    @Column({ type: 'integer', nullable: true })
-    age: number;
+    @Column({ type: 'timestamptz', nullable: true, default: null })
+    birthDay: Date;
 
     @Column({ type: 'text', nullable: false })
     @Index({ unique: true })
-    eMail!: string;
+    email!: string;
 
-    @Column({type: 'text', nullable: false})
-    password!: string;
+    @Column({type: 'text', nullable: false, default: 'https://memepedia.ru/wp-content/uploads/2018/09/papey-gavna-original.jpg'})
+    avatarLink!: string;
 }
