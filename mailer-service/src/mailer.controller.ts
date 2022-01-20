@@ -12,8 +12,6 @@ export class MailerController {
         const channel = context.getChannelRef();
         const originMsg = context.getMessage();
 
-        // await this.mailerService.maSuperLong(data);
-
         if ( data.email ) {
             await this.mailerService.sendEmail(
                 'no-reply@take.place',

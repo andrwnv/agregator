@@ -34,7 +34,9 @@ class ConfigService {
             transport: Transport.RMQ,
             options: {
                 urls: [`amqp://${this.getValue('MAILER_AMQP_HOST')}:${this.getValue('MAILER_AMQP_PORT')}`],
-                queue: `${this.getValue('MAILER_AMQP_QUEUE_NAME')}`
+                queue: `${this.getValue('MAILER_AMQP_QUEUE_NAME')}`,
+                noAck: false,
+                prefetchCount: 1
             }
         };
     }
