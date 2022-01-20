@@ -1,14 +1,9 @@
-import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 
 import { BaseEntity } from './base.entity';
 import { BanReason } from './ban-reason.entity';
 import { Max, Min } from 'class-validator';
-
-export enum UserRole {
-    ADMIN = "admin",
-    MODER = "moderator",
-    USER = "default-user"
-}
+import { UserRoles } from '../roles/roles.enum';
 
 @Entity({name: 'user-entity'})
 export class UserEntity extends BaseEntity {
@@ -56,8 +51,8 @@ export class UserEntity extends BaseEntity {
 
     @Column({
         type: "enum",
-        enum: UserRole,
-        default: UserRole.USER
+        enum: UserRoles,
+        default: UserRoles.USER
     })
-    role: UserRole;
+    role: UserRoles;
 }

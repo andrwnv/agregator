@@ -28,7 +28,8 @@ export class UserService {
         @InjectRepository(UserEntity) private readonly userRepo: Repository<UserEntity>,
         @InjectRepository(BanReason) private readonly banReasonsRepo: Repository<BanReason>,
         // private readonly mailerPublisher: MailerRmqService
-    ) { }
+    ) {
+    }
 
     // public async sendConfirmEmail(id: string, email: string): Promise<void> {
     //     // const pendingOperations = Array.from(new Array(100)).map((_, index) => {

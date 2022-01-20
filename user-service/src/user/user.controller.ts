@@ -1,9 +1,15 @@
 import {
+    Body,
     Controller,
-    Body, Res, Param,
-    HttpCode, HttpStatus,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
     Logger,
-    Post, Patch, Delete, Get
+    Param,
+    Patch,
+    Post,
+    Res
 } from '@nestjs/common';
 
 import { Response } from 'express';
@@ -12,13 +18,13 @@ import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { BanUserDto, CreateUserDto, UpdateUserDto } from './dto/user-events.dto';
 import { BaseUserDto } from './dto/user-info.dto';
-
+import { RoleAccess } from '../roles/roles.decorator';
+import { UserRoles } from '../roles/roles.enum';
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-    constructor(private userService: UserService) {
-    }
+    constructor(private userService: UserService) { }
 
     private readonly logger = new Logger(UserController.name);
 
@@ -70,6 +76,7 @@ export class UserController {
 
     @Patch('/ban')
     @HttpCode(HttpStatus.OK)
+    @RoleAccess(UserRoles.ADMIN, UserRoles.MODER)
     public async ban(@Body() dto: BanUserDto): Promise<void> {
         if (await this.userService.banUser(dto))
             this.logger.log(`{PATCH} -> Banned user ${dto.id}`);
@@ -77,6 +84,7 @@ export class UserController {
 
     @Patch('/unban/:id')
     @HttpCode(HttpStatus.OK)
+    @RoleAccess(UserRoles.ADMIN, UserRoles.MODER)
     @ApiParam({name: 'id', required: true, schema: {type: 'string'}})
     public async unban(@Param('id') id: string): Promise<void> {
         if (await this.userService.unbanUser(id))
