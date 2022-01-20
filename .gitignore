@@ -118,3 +118,6 @@ dist
 
 .idea/
 container/
+
+user-service/files/
+!user-service/files/default_avatar.jpg
