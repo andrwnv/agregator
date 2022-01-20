@@ -1,4 +1,4 @@
-import { IsBoolean, IsDate, IsEmail, IsInt, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
@@ -37,4 +37,10 @@ export class BaseUserDto {
 export class UserDto extends BaseUserDto {
     @IsDate() @Expose()
     birthDay: Date;
+
+    @IsNumber() @Expose()
+    adventureRank: number;
+
+    // @IsArray() @Expose()
+    // friends: BaseUserDto[]
 }

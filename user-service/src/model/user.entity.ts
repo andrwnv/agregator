@@ -1,7 +1,8 @@
-import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, OneToOne } from 'typeorm';
 
 import { BaseEntity } from './base.entity';
 import { BanReason } from './ban-reason.entity';
+import { Max, Min } from 'class-validator';
 
 
 @Entity({name: 'user-entity'})
@@ -38,4 +39,13 @@ export class UserEntity extends BaseEntity {
     @OneToOne(() => BanReason)
     @JoinColumn()
     banReason: BanReason;
+
+    @Column({type: 'float', nullable: false, default: 1.0})
+    @Max(100)
+    @Min(1)
+    adventureRank: number;
+
+    // @ManyToMany(() => UserEntity)
+    // @JoinTable()
+    // friends: UserEntity[];
 }
