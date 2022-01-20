@@ -27,7 +27,7 @@ export class UserEntity extends BaseEntity {
     @Column({
         type: 'text',
         nullable: false,
-        default: 'https://memepedia.ru/wp-content/uploads/2018/09/papey-gavna-original.jpg'
+        default: 'default_avatar.jpg'
     })
     avatarLink!: string;
 

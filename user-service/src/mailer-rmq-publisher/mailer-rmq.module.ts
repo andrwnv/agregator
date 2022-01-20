@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MailerRmqService } from './mailer-rmq.service';
 import { ClientsModule } from '@nestjs/microservices';
 import { MailerRmqController } from './mailer-rmq.controller';
-import { configService } from '../config/config.service';
+import { configService } from '../utils/config/config.service';
 
 @Module({
     providers: [MailerRmqService],

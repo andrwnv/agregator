@@ -41,11 +41,6 @@ export class UpdateUserDto {
     @ApiProperty()
     email: string;
 
-    @IsString()
-    @IsNotEmpty()
-    @ApiProperty()
-    avatarLink: string;
-
     @IsDate()
     @ApiProperty()
     birthDay: Date;

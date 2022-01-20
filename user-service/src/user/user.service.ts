@@ -43,7 +43,7 @@ export class UserService {
     //     // await Promise.all(pendingOperations);
     // }
 
-    public async getUser(id): Promise<UserDto> {
+    private async _getUser(id: string): Promise<UserEntity> {
         if (!isValidUUID(id))
             throw new BadRequestException("Incorrect UUID");
 
@@ -54,7 +54,12 @@ export class UserService {
         if (!user.length)
             throw new NotFoundException("UUID not found");
 
-        return plainToInstance(UserDto, user[0]);
+        return user[0];
+    }
+
+    public async getUser(id): Promise<UserDto> {
+        const user = await this._getUser(id);
+        return plainToInstance(UserDto, user);
     }
 
     public async createUser(dto: CreateUserDto): Promise<BaseUserDto> {
@@ -65,7 +70,7 @@ export class UserService {
     }
 
     public async deleteUser(id): Promise<boolean> {
-        const user = await this.getUser(id);
+        const user = await this._getUser(id);
 
         return await this.userRepo.delete({
             id: user.id,
@@ -73,18 +78,10 @@ export class UserService {
     }
 
     public async updateUser(dto: UpdateUserDto): Promise<UpdateUserDto> {
-        if (!isValidUUID(dto.id))
-            throw new BadRequestException("Incorrect UUID");
-
-        const user = await this.userRepo.find({
-            id: dto.id,
-        });
-
-        if (!user.length)
-            throw new NotFoundException("UUID not found");
+        const user = await this._getUser(dto.id);
 
         return this.userRepo.save({
-            ...user[0],
+            ...user,
             ...dto,
         }).then(() => dto).catch((err) => {
             throw new InternalServerErrorException(err)
@@ -92,23 +89,15 @@ export class UserService {
     }
 
     public async banUser(dto: BanUserDto): Promise<boolean> {
-        if (!isValidUUID(dto.id))
-            throw new BadRequestException("Incorrect UUID");
-
-        const users = await this.userRepo.find({
-            id: dto.id,
-        });
+        const user = await this._getUser(dto.id);
 
         const banReasons = await this.banReasonsRepo.find({
             id: dto.banReason,
         });
 
-        if (!users.length)
-            throw new NotFoundException("UUID not found");
-        else if (!banReasons.length)
+        if (!banReasons.length)
             throw new NotFoundException("Ban reason not found");
 
-        const user = users[0];
         const banReason = banReasons[0];
 
         user.banDate = new Date();
@@ -123,17 +112,8 @@ export class UserService {
     }
 
     public async unbanUser(id): Promise<boolean> {
-        if (!isValidUUID(id))
-            throw new BadRequestException("Incorrect UUID");
+        const user = await this._getUser(id);
 
-        const users = await this.userRepo.find({
-            id: id,
-        });
-
-        if (!users.length)
-            throw new NotFoundException("UUID not found");
-
-        const user = users[0];
         user.banDate = null;
         user.banned = false;
         user.banReason = null;
@@ -141,5 +121,16 @@ export class UserService {
         return await this.userRepo.save({
             ...user
         }).then(() => true);
+    }
+
+    public async updateUserAvatar(id: string, filename: string): Promise<boolean> {
+        const user = await this._getUser(id);
+        user.avatarLink = filename;
+
+        return this.userRepo.save({
+            ...user,
+        }).then(() => true).catch((err) => {
+            throw new InternalServerErrorException(err)
+        });
     }
 }

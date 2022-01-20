@@ -9,17 +9,22 @@ import {
     Param,
     Patch,
     Post,
-    Res
+    Res, UploadedFile, UseInterceptors, Headers, InternalServerErrorException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { Response } from 'express';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import * as fs from 'fs';
 
 import { UserService } from './user.service';
 import { BanUserDto, CreateUserDto, UpdateUserDto } from './dto/user-events.dto';
 import { BaseUserDto } from './dto/user-info.dto';
 import { RoleAccess } from '../roles/roles.decorator';
 import { UserRoles } from '../roles/roles.enum';
+import { editFileName, imageFilter } from '../utils/file-upload.utils';
+
 
 @ApiTags('user')
 @Controller('user')
@@ -89,5 +94,35 @@ export class UserController {
     public async unban(@Param('id') id: string): Promise<void> {
         if (await this.userService.unbanUser(id))
             this.logger.log(`{PATCH} -> Unbanned user ${id}`);
+    }
+
+    @Patch('/upload_avatar')
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(
+        FileInterceptor('image', {
+            storage: diskStorage({
+                destination: './files',
+                filename: editFileName,
+            }),
+            fileFilter: imageFilter,
+        }),
+    )
+    public async uploadAvatar(@Headers() h, @UploadedFile() file, @Res() res: Response): Promise<void> {
+        if (await this.userService.updateUserAvatar(h['user_id'], file.filename)) {
+            res.json({
+                originalName: file.originalname,
+                filename: file.filename,
+                size: file.size
+            });
+        } else {
+            throw new InternalServerErrorException();
+        }
+    }
+
+    @Get('/avatar/:id')
+    @HttpCode(HttpStatus.OK)
+    public async getAvatar(@Param('id') id, @Res() res): Promise<void> {
+        const user = await this.userService.getUser(id);
+        res.sendFile(user.avatarLink, {root: './files'});
     }
 }
