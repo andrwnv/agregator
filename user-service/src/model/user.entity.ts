@@ -4,6 +4,11 @@ import { BaseEntity } from './base.entity';
 import { BanReason } from './ban-reason.entity';
 import { Max, Min } from 'class-validator';
 
+export enum UserRole {
+    ADMIN = "admin",
+    MODER = "moderator",
+    USER = "default-user"
+}
 
 @Entity({name: 'user-entity'})
 export class UserEntity extends BaseEntity {
@@ -48,4 +53,11 @@ export class UserEntity extends BaseEntity {
     // @ManyToMany(() => UserEntity)
     // @JoinTable()
     // friends: UserEntity[];
+
+    @Column({
+        type: "enum",
+        enum: UserRole,
+        default: UserRole.USER
+    })
+    role: UserRole;
 }
