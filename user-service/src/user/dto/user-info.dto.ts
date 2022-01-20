@@ -1,4 +1,4 @@
-import { IsBoolean, IsDate, IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsDate, IsEmail, IsInt, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
@@ -29,6 +29,9 @@ export class BaseUserDto {
 
     @IsDate() @Expose()
     banDate: Date;
+
+    @IsNumber() @Expose()
+    banReason: number;
 }
 
 export class UserDto extends BaseUserDto {

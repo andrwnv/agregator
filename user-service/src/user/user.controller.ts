@@ -10,7 +10,7 @@ import { Response } from 'express';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto } from './dto/user-events.dto';
+import { BanUserDto, CreateUserDto, UpdateUserDto } from './dto/user-events.dto';
 import { BaseUserDto } from './dto/user-info.dto';
 
 
@@ -66,5 +66,20 @@ export class UserController {
     public async delete(@Param('id') id: string): Promise<void> {
         await this.userService.deleteUser(id);
         this.logger.log(`{DELETE} -> Deleted user ${id}`);
+    }
+
+    @Patch('/ban')
+    @HttpCode(HttpStatus.OK)
+    public async ban(@Body() dto: BanUserDto): Promise<void> {
+        if (await this.userService.banUser(dto))
+            this.logger.log(`{PATCH} -> Banned user ${dto.id}`);
+    }
+
+    @Patch('/unban/:id')
+    @HttpCode(HttpStatus.OK)
+    @ApiParam({name: 'id', required: true, schema: {type: 'string'}})
+    public async unban(@Param('id') id: string): Promise<void> {
+        if (await this.userService.unbanUser(id))
+            this.logger.log(`{PATCH} -> Unbanned user ${id}`);
     }
 }

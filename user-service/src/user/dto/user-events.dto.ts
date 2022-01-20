@@ -1,4 +1,4 @@
-import { IsDate, IsEmail, IsNotEmpty, IsString, IsUUID, Length } from 'class-validator';
+import { IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, IsUUID, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -54,4 +54,14 @@ export class UpdateUserDto {
     @ApiProperty()
     @Length(8, 32)
     password: string;
+}
+
+export class BanUserDto {
+    @IsUUID()
+    @ApiProperty()
+    id: string;
+
+    @IsNumber()
+    @ApiProperty()
+    banReason: number;
 }
