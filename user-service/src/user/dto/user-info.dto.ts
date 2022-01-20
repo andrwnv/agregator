@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()

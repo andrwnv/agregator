@@ -1,9 +1,10 @@
 import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
+import { Max, Min } from 'class-validator';
 
 import { BaseEntity } from './base.entity';
 import { BanReason } from './ban-reason.entity';
-import { Max, Min } from 'class-validator';
 import { UserRoles } from '../roles/roles.enum';
+
 
 @Entity({name: 'user-entity'})
 export class UserEntity extends BaseEntity {

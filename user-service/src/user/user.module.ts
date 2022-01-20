@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserController } from './user.controller';
+
 import { UserService } from './user.service';
 import { UserEntity } from '../model/user.entity';
-import { MailerRmqModule } from '../mailer-rmq-publisher/mailer-rmq.module';
+import { UserController } from './user.controller';
 import { BanReason } from '../model/ban-reason.entity';
-import { APP_GUARD } from '@nestjs/core';
 import { StaffAccessGuard } from '../roles/roles.guard';
+import { MailerRmqModule } from '../mailer-rmq-publisher/mailer-rmq.module';
+
 
 @Module({
     imports: [
