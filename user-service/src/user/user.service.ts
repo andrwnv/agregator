@@ -15,6 +15,7 @@ import { BanUserDto, CreateUserDto, UpdateUserDto } from './dto/user-events.dto'
 import { BaseUserDto, UserDto } from './dto/user-info.dto';
 import { UserEntity } from '../model/user.entity';
 import { BanReason } from '../model/ban-reason.entity';
+import { PreferenceDto } from './dto/preference.dto';
 
 
 function isValidUUID(str) {
@@ -58,8 +59,18 @@ export class UserService {
     }
 
     public async getUser(id): Promise<UserDto> {
-        const user = await this._getUser(id);
-        return plainToInstance(UserDto, user);
+        if (!isValidUUID(id))
+            throw new BadRequestException("Incorrect UUID");
+
+        const user = await this.userRepo
+            .createQueryBuilder("user")
+            .leftJoinAndSelect("user.preferences", "preference")
+            .getMany();
+
+        if (!user.length)
+            throw new NotFoundException("UUID not found");
+
+        return plainToInstance(UserDto, user[0]);
     }
 
     public async createUser(dto: CreateUserDto): Promise<BaseUserDto> {

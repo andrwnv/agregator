@@ -16,7 +16,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
-import * as fs from 'fs';
 
 import { UserService } from './user.service';
 import { BanUserDto, CreateUserDto, UpdateUserDto } from './dto/user-events.dto';

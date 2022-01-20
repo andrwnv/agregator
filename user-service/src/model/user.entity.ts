@@ -1,9 +1,10 @@
-import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, OneToOne } from 'typeorm';
 import { Max, Min } from 'class-validator';
 
 import { BaseEntity } from './base.entity';
 import { BanReason } from './ban-reason.entity';
 import { UserRoles } from '../roles/roles.enum';
+import { PreferenceEntity } from './preference.entity';
 
 
 @Entity({name: 'user-entity'})
@@ -56,4 +57,12 @@ export class UserEntity extends BaseEntity {
         default: UserRoles.USER
     })
     role: UserRoles;
+
+    @ManyToMany(() => PreferenceEntity)
+    @JoinTable({
+        name: 'user-preferences',
+        joinColumn: { name: 'user_id', referencedColumnName: 'id'},
+        inverseJoinColumn: { name: 'preference_id', referencedColumnName: 'id'},
+    })
+    preferences: PreferenceEntity[];
 }

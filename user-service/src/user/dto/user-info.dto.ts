@@ -1,5 +1,6 @@
-import { IsBoolean, IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
+import { PreferenceDto } from './preference.dto';
 
 @Exclude()
 export class BaseUserDto {
@@ -43,4 +44,6 @@ export class UserDto extends BaseUserDto {
 
     // @IsArray() @Expose()
     // friends: BaseUserDto[]
+    @IsArray()
+    preferences: PreferenceDto[];
 }
