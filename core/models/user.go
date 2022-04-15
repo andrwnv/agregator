@@ -1,7 +1,10 @@
 package models
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"github.com/andrwnv/event-aggregator/core"
+	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -22,4 +25,28 @@ func CreateUser(u *User) (err error) {
 
 func GetByEmail(u *User, email string) (err error) {
 	return core.ServerInst.Database.Where("email = ?", email).First(u).Error
+}
+
+// ------------------ Conversations ------------------
+
+func From(dto dto.CreateUser) User {
+	passHash := sha1.New()
+	passHash.Write([]byte(dto.Password))
+
+	return User{
+		ID:        uuid.New(),
+		FirstName: dto.FirstName,
+		LastName:  dto.SecondName,
+		Email:     dto.Email,
+		Password:  hex.EncodeToString(passHash.Sum(nil)),
+	}
+}
+
+func To(user User) dto.BaseUserInfo {
+	return dto.BaseUserInfo{
+		ID:         user.ID.String(),
+		FirstName:  user.FirstName,
+		SecondName: user.LastName,
+		Email:      user.Email,
+	}
 }
