@@ -12,9 +12,10 @@ func RegisterUser(ctx *gin.Context) {
 	var _dto dto.CreateUser
 
 	if err := ctx.BindJSON(&_dto); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Incorrect request body!",
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Incorrect request body!",
 		})
+		return
 	}
 
 	passHash := sha1.New()
@@ -24,8 +25,8 @@ func RegisterUser(ctx *gin.Context) {
 	err := models.CreateUser(&user)
 
 	if err != nil {
-		ctx.JSON(http.StatusConflict, gin.H{
-			"message": "User already exists!",
+		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{
+			"error": "User already exists!",
 		})
 		return
 	}
