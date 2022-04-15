@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/models"
 	"github.com/gin-gonic/gin"
@@ -15,12 +17,15 @@ func RegisterUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, "Incorrect req body")
 	}
 
+	passHash := sha1.New()
+	passHash.Write([]byte(_dto.Password))
+
 	user := models.User{
 		ID:        uuid.New(),
 		FirstName: _dto.FirstName,
 		LastName:  _dto.SecondName,
 		Email:     _dto.Email,
-		Password:  _dto.Password,
+		Password:  hex.EncodeToString(passHash.Sum(nil)),
 	}
 	err := models.CreateUser(&user)
 
