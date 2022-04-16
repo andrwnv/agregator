@@ -22,6 +22,11 @@ func InitRouter() *gin.Engine {
 		{
 			userGroup.POST("create", controllers.RegisterUser)
 		}
+
+		authGroup := apiV1.Group("/auth")
+		{
+			authGroup.POST("/login", controllers.Login)
+		}
 	}
 
 	return r
