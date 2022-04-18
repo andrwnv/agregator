@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func AuthorizeJWT() gin.HandlerFunc {
+func AuthorizeJWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const BearerSchema = "Bearer"
 		authHeader := c.GetHeader("Authorization")

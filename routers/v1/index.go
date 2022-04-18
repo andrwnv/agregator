@@ -16,13 +16,14 @@ func InitRouter() *gin.Engine {
 	r.Use(gin.Logger())
 
 	apiV1 := r.Group("/api/v1")
+	apiV1.Use(middleware.CORSMiddleware())
 	{
 		apiV1.GET("/say_hello", SayHello)
 
 		userGroup := apiV1.Group("/user")
 		{
 			userGroup.POST("/create", controllers.RegisterUser)
-			userGroup.DELETE("/delete", middleware.AuthorizeJWT(), controllers.DeleteUser)
+			userGroup.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), controllers.DeleteUser)
 		}
 
 		authGroup := apiV1.Group("/auth")

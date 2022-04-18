@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 func init() {
@@ -27,10 +28,10 @@ func main() {
 	}
 
 	host := os.Getenv("HOST")
-	port := os.Getenv("PORT")
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
-	fmt.Println("Server Running on Port: ", port)
-	err = http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), core.ServerInst.Router)
+	fmt.Printf("Server Running on Port: %s:%d\n", host, port)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), core.ServerInst.Router)
 	if err != nil {
 		panic("[ERROR]: Cant start HTTP server")
 	}
