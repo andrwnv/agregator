@@ -20,7 +20,7 @@ type User struct {
 }
 
 func DeleteUser(id string) (err error) {
-	return core.ServerInst.Database.Where("id = ?", id).Delete(&User{}).Error
+	return core.ServerInst.Database.Exec("DELETE FROM users WHERE id = ?", id).Error
 }
 
 func CreateUser(u User) (err error) {
