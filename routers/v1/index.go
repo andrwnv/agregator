@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/andrwnv/event-aggregator/controllers"
+	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -20,7 +21,8 @@ func InitRouter() *gin.Engine {
 
 		userGroup := apiV1.Group("/user")
 		{
-			userGroup.POST("create", controllers.RegisterUser)
+			userGroup.POST("/create", controllers.RegisterUser)
+			userGroup.DELETE("/delete", middleware.AuthorizeJWT(), controllers.DeleteUser)
 		}
 
 		authGroup := apiV1.Group("/auth")

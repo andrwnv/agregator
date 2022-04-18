@@ -2,20 +2,27 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/andrwnv/event-aggregator/core/services"
+	"github.com/andrwnv/event-aggregator/core"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 func AuthorizeJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const BearerSchema = "Bearer"
 		authHeader := c.GetHeader("Authorization")
-		tokenString := authHeader[len(BearerSchema):]
-		token, err := services.JWTAuthService().ValidateToken(tokenString)
+		if authHeader == "" {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		tokenString := strings.ReplaceAll(authHeader[len(BearerSchema):], " ", "")
+		token, err := core.ServerInst.JwtService.ValidateToken(tokenString)
 		if token.Valid {
 			claims := token.Claims.(jwt.MapClaims)
+			c.Set("token-claims", claims["user"])
 			fmt.Println(claims)
 		} else {
 			fmt.Println(err)

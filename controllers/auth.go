@@ -19,8 +19,13 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	user := models.User{}
-	models.GetByEmail(&user, credential.Email)
+	user, err := models.GetByEmail(credential.Email)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error": "Invalid auth info",
+		})
+		return
+	}
 
 	info := services.LoginInfo{
 		Email:    user.Email,

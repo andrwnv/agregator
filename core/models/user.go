@@ -19,12 +19,17 @@ type User struct {
 	Password  string    `gorm:"not null"`
 }
 
-func CreateUser(u *User) (err error) {
-	return core.ServerInst.Database.Create(u).Error
+func DeleteUser(id string) (err error) {
+	return core.ServerInst.Database.Where("id = ?", id).Delete(&User{}).Error
 }
 
-func GetByEmail(u *User, email string) (err error) {
-	return core.ServerInst.Database.Where("email = ?", email).First(u).Error
+func CreateUser(u User) (err error) {
+	return core.ServerInst.Database.Create(&u).Error
+}
+
+func GetByEmail(email string) (user User, err error) {
+	err = core.ServerInst.Database.Where("email = ?", email).First(&user).Error
+	return user, err
 }
 
 // ------------------ Conversations ------------------
