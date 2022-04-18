@@ -19,7 +19,7 @@ type User struct {
 	Password  string    `gorm:"not null"`
 }
 
-// ----- UserRepo methods
+// ----- UserRepo methods -----
 
 type UserRepoCrud interface {
 	Create(dto dto.CreateUser) error
@@ -58,4 +58,15 @@ func (repo *UserRepo) Delete(dto dto.BaseUserInfo) error {
 func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
 	err = core.ServerInst.Database.Where("email = ?", email).First(&user).Error
 	return user, err
+}
+
+// ----- Conversations -----
+
+func To(user User) dto.BaseUserInfo {
+	return dto.BaseUserInfo{
+		ID:         user.ID.String(),
+		FirstName:  user.FirstName,
+		SecondName: user.LastName,
+		Email:      user.Email,
+	}
 }
