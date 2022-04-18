@@ -1,21 +1,13 @@
 package controllers
 
 import (
+	"github.com/andrwnv/event-aggregator/core"
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/models"
 	"github.com/andrwnv/event-aggregator/core/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
-
-type LoginController interface {
-	Login(ctx *gin.Context) string
-}
-
-type loginController struct {
-	loginService services.AuthService
-	jWtService   services.JWTService
-}
 
 func Login(ctx *gin.Context) {
 	var credential dto.LoginCredentials
@@ -37,7 +29,7 @@ func Login(ctx *gin.Context) {
 
 	isUserAuthenticated := services.Login(credential, info)
 	if isUserAuthenticated {
-		token := services.JWTAuthService().GenerateToken(credential.Email, models.To(user))
+		token := core.ServerInst.JwtService.GenerateToken(credential.Email, models.To(user))
 		if token != "" {
 			ctx.JSON(http.StatusOK, gin.H{
 				"token": token,

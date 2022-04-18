@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/joho/godotenv"
 	"os"
 	"time"
 )
@@ -19,19 +20,20 @@ type authCustomClaims struct {
 	jwt.StandardClaims
 }
 
-type jwtServices struct {
+type _jwtServices struct {
 	secretKey string
 	issue     string
 }
 
 func JWTAuthService() JWTService {
-	return &jwtServices{
+	return &_jwtServices{
 		secretKey: getSecretKey(),
-		issue:     "me",
+		issue:     "take-place",
 	}
 }
 
 func getSecretKey() string {
+	godotenv.Load(".env")
 	secret := os.Getenv("SECRET")
 	if secret == "" {
 		secret = "secret"
@@ -39,7 +41,7 @@ func getSecretKey() string {
 	return secret
 }
 
-func (service *jwtServices) GenerateToken(email string, user dto.BaseUserInfo) string {
+func (service *_jwtServices) GenerateToken(email string, user dto.BaseUserInfo) string {
 	claims := &authCustomClaims{
 		email,
 		user,
@@ -58,7 +60,7 @@ func (service *jwtServices) GenerateToken(email string, user dto.BaseUserInfo) s
 	return t
 }
 
-func (service *jwtServices) ValidateToken(encodedToken string) (*jwt.Token, error) {
+func (service *_jwtServices) ValidateToken(encodedToken string) (*jwt.Token, error) {
 	return jwt.Parse(encodedToken, func(token *jwt.Token) (interface{}, error) {
 		if _, isValid := token.Method.(*jwt.SigningMethodHMAC); !isValid {
 			return nil, fmt.Errorf("invalid token")
