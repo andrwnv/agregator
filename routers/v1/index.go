@@ -7,11 +7,25 @@ import (
 	"net/http"
 )
 
+type Controllers struct {
+	userController *controllers.UserController
+	authController *controllers.AuthController
+}
+
+func NewController(
+	u *controllers.UserController,
+	a *controllers.AuthController) Controllers {
+	return Controllers{
+		userController: u,
+		authController: a,
+	}
+}
+
 func SayHello(c *gin.Context) {
 	c.JSON(http.StatusOK, "Hello.")
 }
 
-func InitRouter() *gin.Engine {
+func (c *Controllers) MakeRoutes() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 
@@ -22,13 +36,14 @@ func InitRouter() *gin.Engine {
 
 		userGroup := apiV1.Group("/user")
 		{
-			userGroup.POST("/create", controllers.RegisterUser)
-			userGroup.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), controllers.DeleteUser)
+			userGroup.POST("/create", c.userController.Create)
+			userGroup.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), c.userController.Delete)
+			userGroup.GET("/me", c.userController.Get)
 		}
 
 		authGroup := apiV1.Group("/auth")
 		{
-			authGroup.POST("/login", controllers.Login)
+			authGroup.POST("/login", c.authController.Login)
 		}
 	}
 

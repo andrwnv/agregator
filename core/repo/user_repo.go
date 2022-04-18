@@ -3,7 +3,6 @@ package repo
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"github.com/andrwnv/event-aggregator/core"
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -56,7 +55,7 @@ func (repo *UserRepo) Delete(dto dto.BaseUserInfo) error {
 }
 
 func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
-	err = core.ServerInst.Database.Where("email = ?", email).First(&user).Error
+	err = repo.Repo.Database.Where("email = ?", email).First(&user).Error
 	return user, err
 }
 

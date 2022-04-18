@@ -12,6 +12,7 @@ type PgRepo struct {
 }
 
 func NewPgRepo() (pg *PgRepo) {
+	pg = &PgRepo{}
 	pg.url = "host=localhost user=postgres password=852456 dbname=event_aggregator port=5432 sslmode=disable"
 
 	var err error

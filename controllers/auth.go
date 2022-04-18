@@ -3,13 +3,21 @@ package controllers
 import (
 	"github.com/andrwnv/event-aggregator/core"
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/models"
+	"github.com/andrwnv/event-aggregator/core/repo"
 	"github.com/andrwnv/event-aggregator/core/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func Login(ctx *gin.Context) {
+type AuthController struct {
+	repo *repo.UserRepo
+}
+
+func NewAuthController(r *repo.UserRepo) *AuthController {
+	return &AuthController{repo: r}
+}
+
+func (c *AuthController) Login(ctx *gin.Context) {
 	var credential dto.LoginCredentials
 	err := ctx.ShouldBind(&credential)
 	if err != nil {
@@ -19,7 +27,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	user, err := models.GetByEmail(credential.Email)
+	user, err := c.repo.GetByEmail(credential.Email)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": "Invalid auth info",
@@ -34,7 +42,7 @@ func Login(ctx *gin.Context) {
 
 	isUserAuthenticated := services.Login(credential, info)
 	if isUserAuthenticated {
-		token := core.ServerInst.JwtService.GenerateToken(credential.Email, models.To(user))
+		token := core.SERVER.JwtService.GenerateToken(credential.Email, repo.To(user))
 		if token != "" {
 			ctx.JSON(http.StatusOK, gin.H{
 				"token": token,

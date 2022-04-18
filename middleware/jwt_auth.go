@@ -19,7 +19,7 @@ func AuthorizeJWTMiddleware() gin.HandlerFunc {
 		}
 
 		tokenString := strings.ReplaceAll(authHeader[len(BearerSchema):], " ", "")
-		token, err := core.ServerInst.JwtService.ValidateToken(tokenString)
+		token, err := core.SERVER.JwtService.ValidateToken(tokenString)
 		if token.Valid {
 			claims := token.Claims.(jwt.MapClaims)
 			c.Set("token-claims", claims["user"])
