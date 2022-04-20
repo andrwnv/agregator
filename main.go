@@ -20,6 +20,7 @@ func init() {
 	_ = repo.NewEventRepo(globalRepo)
 	_ = repo.NewPlaceRepo(globalRepo)
 	_ = repo.NewUserStoryRepo(globalRepo)
+	_ = repo.NewRegionRepo(globalRepo)
 
 	userController := controllers.NewUserController(userRepo)
 	autoController := controllers.NewAuthController(userRepo)

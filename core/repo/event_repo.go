@@ -19,8 +19,10 @@ type Event struct {
 	Description     string    `gorm:"not null"`
 	Longitude       float32   `gorm:"not null"`
 	Latitude        float32   `gorm:"not null"`
+	RegionID        uuid.UUID
 
-	createdBy User
+	region    Region `gorm:"foreignKey:region_id;references:id"`
+	createdBy User   `gorm:"foreignKey:user_id;references:id"`
 }
 
 type EventComment struct {
