@@ -18,6 +18,7 @@ func init() {
 	globalRepo := repo.NewPgRepo()
 	userRepo := repo.NewUserRepo(globalRepo)
 	_ = repo.NewEventRepo(globalRepo)
+	_ = repo.NewPlaceRepo(globalRepo)
 
 	userController := controllers.NewUserController(userRepo)
 	autoController := controllers.NewAuthController(userRepo)
