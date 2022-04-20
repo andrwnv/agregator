@@ -28,8 +28,8 @@ type PlaceComment struct {
 	CreatedByID uuid.UUID `gorm:"not null"`
 	CommentText string    `gorm:"not null"`
 
-	LinkedEvent Place `gorm:"foreignKey:event_id;references:id"`
-	CreatedBy   User  `gorm:"foreignKey:created_by_id;references:id"`
+	linkedEvent Place `gorm:"foreignKey:event_id;references:id"`
+	createdBy   User  `gorm:"foreignKey:created_by_id;references:id"`
 }
 
 type PlacePhoto struct {
