@@ -16,6 +16,8 @@ type User struct {
 	LastName  string    `gorm:"not null"`
 	Email     string    `gorm:"unique;not null"`
 	Password  string    `gorm:"not null"`
+	BirthDay  int       `gorm:"null,type:bigint"`
+	Verified  bool      `gorm:"not null;default: false"`
 }
 
 // ----- UserRepo methods -----
@@ -32,6 +34,8 @@ type UserRepo struct {
 }
 
 func NewUserRepo(repo *PgRepo) *UserRepo {
+	_ = repo.Database.AutoMigrate(&User{})
+
 	return &UserRepo{
 		Repo: repo,
 	}
@@ -67,5 +71,7 @@ func To(user User) dto.BaseUserInfo {
 		FirstName:  user.FirstName,
 		SecondName: user.LastName,
 		Email:      user.Email,
+		BirthDay:   user.BirthDay,
+		Verified:   user.Verified,
 	}
 }

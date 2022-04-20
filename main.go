@@ -14,11 +14,10 @@ import (
 	"strconv"
 )
 
-//var CONTROLLER v1.Controllers
-
 func init() {
 	globalRepo := repo.NewPgRepo()
 	userRepo := repo.NewUserRepo(globalRepo)
+	_ = repo.NewEventRepo(globalRepo)
 
 	userController := controllers.NewUserController(userRepo)
 	autoController := controllers.NewAuthController(userRepo)
