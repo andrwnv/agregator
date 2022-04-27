@@ -6,8 +6,8 @@ import (
 	"github.com/andrwnv/event-aggregator/core"
 	"github.com/andrwnv/event-aggregator/core/repo"
 	"github.com/andrwnv/event-aggregator/core/services"
+	"github.com/andrwnv/event-aggregator/misc"
 	v1 "github.com/andrwnv/event-aggregator/routers/v1"
-	"github.com/andrwnv/event-aggregator/utils"
 	"github.com/joho/godotenv"
 	"net/http"
 	"os"
@@ -17,7 +17,7 @@ import (
 func init() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		utils.ReportCritical("Cant load env variables")
+		misc.ReportCritical("Cant load env variables")
 	}
 
 	globalRepo := repo.NewPgRepo()
@@ -41,7 +41,7 @@ func init() {
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		utils.ReportCritical("Cant load env variables")
+		misc.ReportCritical("Cant load env variables")
 	}
 
 	host := os.Getenv("HOST")
@@ -50,6 +50,6 @@ func main() {
 	fmt.Printf("Server Running on Port: %s:%d\n", host, port)
 	err = http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), core.SERVER.Router)
 	if err != nil {
-		utils.ReportCritical("Cant start HTTP server")
+		misc.ReportCritical("Cant start HTTP server")
 	}
 }

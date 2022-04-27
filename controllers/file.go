@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/andrwnv/event-aggregator/utils"
+	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -62,7 +62,7 @@ func (c *FileController) UploadAvatarMiddleware() gin.HandlerFunc {
 	}
 
 	return func(ctx *gin.Context) {
-		user, parseErr := utils.ExtractJwtPayload(ctx)
+		user, parseErr := misc.ExtractJwtPayload(ctx)
 		if parseErr {
 			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": "Cant extract info from claims",
@@ -72,9 +72,7 @@ func (c *FileController) UploadAvatarMiddleware() gin.HandlerFunc {
 
 		file, err := ctx.FormFile("file")
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"message": "No file is received",
-			})
+			ctx.Next()
 			return
 		}
 

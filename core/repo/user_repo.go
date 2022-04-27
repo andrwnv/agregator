@@ -18,6 +18,7 @@ type User struct {
 	Password  string    `gorm:"not null"`
 	BirthDay  int       `gorm:"null,type:bigint"`
 	Verified  bool      `gorm:"not null;default: false"`
+	PhotoUrl  string    `gorm:"null"`
 }
 
 // ----- UserRepo methods -----

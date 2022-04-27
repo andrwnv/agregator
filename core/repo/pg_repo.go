@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"github.com/andrwnv/event-aggregator/utils"
+	"github.com/andrwnv/event-aggregator/misc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,7 +18,7 @@ func NewPgRepo() (pg *PgRepo) {
 	var err error
 	pg.Database, err = gorm.Open(postgres.Open(pg.url), &gorm.Config{})
 	if err != nil {
-		utils.ReportCritical("Couldn't connect database")
+		misc.ReportCritical("Couldn't connect database")
 	}
 
 	return pg

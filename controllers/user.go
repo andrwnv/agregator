@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/repo"
-	"github.com/andrwnv/event-aggregator/utils"
+	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -38,7 +38,7 @@ func (c *UserController) Create(ctx *gin.Context) {
 }
 
 func (c *UserController) Delete(ctx *gin.Context) {
-	user, err := utils.ExtractJwtPayload(ctx)
+	user, err := misc.ExtractJwtPayload(ctx)
 	if err {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Cant extract info from claims",
@@ -57,7 +57,7 @@ func (c *UserController) Delete(ctx *gin.Context) {
 }
 
 func (c *UserController) Get(ctx *gin.Context) {
-	user, err := utils.ExtractJwtPayload(ctx)
+	user, err := misc.ExtractJwtPayload(ctx)
 	if err {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Cant extract info from claims",
@@ -72,7 +72,7 @@ func (c *UserController) Get(ctx *gin.Context) {
 
 func (c *UserController) Update(ctx *gin.Context) {
 	val := ctx.GetString("file-name")
-	utils.ReportInfo(val)
+	misc.ReportInfo(val)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"result": "test",

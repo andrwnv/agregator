@@ -7,6 +7,7 @@ type BaseUserInfo struct {
 	Email      string `json:"email"`
 	BirthDay   int    `json:"birth_day,omitempty"`
 	Verified   bool   `json:"verified"`
+	PhotoUrl   string `json:"photo_url"`
 }
 
 type CreateUser struct {
