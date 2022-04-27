@@ -14,13 +14,13 @@ type Controllers struct {
 }
 
 func NewController(
-	u *controllers.UserController,
-	a *controllers.AuthController,
-	f *controllers.FileController) Controllers {
+	userCtrl *controllers.UserController,
+	authCtrl *controllers.AuthController,
+	fileCtrl *controllers.FileController) Controllers {
 	return Controllers{
-		userController: u,
-		authController: a,
-		fileController: f,
+		userController: userCtrl,
+		authController: authCtrl,
+		fileController: fileCtrl,
 	}
 }
 
