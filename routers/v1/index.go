@@ -28,6 +28,8 @@ func SayHello(c *gin.Context) {
 	c.JSON(http.StatusOK, "Hello.")
 }
 
+// TODO: Make main router. Router != controller, controller is deps to router.
+
 func (c *Controllers) MakeRoutes() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
@@ -41,7 +43,8 @@ func (c *Controllers) MakeRoutes() *gin.Engine {
 		{
 			userGroup.POST("/create", c.userController.Create)
 			userGroup.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), c.userController.Delete)
-			userGroup.GET("/me", c.userController.Get)
+			userGroup.GET("/me", middleware.AuthorizeJWTMiddleware(), c.userController.Get)
+			userGroup.PATCH("/update", middleware.AuthorizeJWTMiddleware(), c.fileController.UploadAvatarMiddleware(), c.userController.Update)
 		}
 
 		authGroup := apiV1.Group("/auth")

@@ -71,9 +71,10 @@ func (c *UserController) Get(ctx *gin.Context) {
 }
 
 func (c *UserController) Update(ctx *gin.Context) {
-	// TODO: impl
+	val := ctx.GetString("file-name")
+	utils.ReportInfo(val)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"result": "TODO",
+		"result": "test",
 	})
 }
