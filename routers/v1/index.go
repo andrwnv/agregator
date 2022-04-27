@@ -10,14 +10,17 @@ import (
 type Controllers struct {
 	userController *controllers.UserController
 	authController *controllers.AuthController
+	fileController *controllers.FileController
 }
 
 func NewController(
 	u *controllers.UserController,
-	a *controllers.AuthController) Controllers {
+	a *controllers.AuthController,
+	f *controllers.FileController) Controllers {
 	return Controllers{
 		userController: u,
 		authController: a,
+		fileController: f,
 	}
 }
 
@@ -45,7 +48,20 @@ func (c *Controllers) MakeRoutes() *gin.Engine {
 		{
 			authGroup.POST("/login", c.authController.Login)
 		}
+
+		fileGroup := apiV1.Group("/file")
+		{
+			fileGroup.GET("/receive/:filename", c.fileController.GetImage)
+		}
 	}
+
+	r.NoRoute(func(c *gin.Context) {
+		c.AbortWithStatusJSON(404, "Not found")
+	})
+
+	r.NoMethod(func(c *gin.Context) {
+		c.AbortWithStatusJSON(405, "Not allowed")
+	})
 
 	return r
 }

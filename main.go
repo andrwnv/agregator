@@ -15,6 +15,11 @@ import (
 )
 
 func init() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		utils.ReportCritical("Cant load env variables")
+	}
+
 	globalRepo := repo.NewPgRepo()
 	userRepo := repo.NewUserRepo(globalRepo)
 	_ = repo.NewEventRepo(globalRepo)
@@ -24,8 +29,9 @@ func init() {
 
 	userController := controllers.NewUserController(userRepo)
 	autoController := controllers.NewAuthController(userRepo)
+	fileController := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"))
 
-	controller := v1.NewController(userController, autoController)
+	controller := v1.NewController(userController, autoController, fileController)
 	core.SERVER = &core.Server{
 		Router:     controller.MakeRoutes(),
 		JwtService: services.JWTAuthService(),

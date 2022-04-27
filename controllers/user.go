@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"encoding/json"
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -38,17 +38,13 @@ func (c *UserController) Create(ctx *gin.Context) {
 }
 
 func (c *UserController) Delete(ctx *gin.Context) {
-	claims, ok := ctx.Get("token-claims")
-	if !ok {
+	user, err := utils.ExtractJwtPayload(ctx)
+	if err {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Cant extract info from claims",
 		})
 		return
 	}
-
-	j, _ := json.Marshal(claims.(map[string]interface{}))
-	user := dto.BaseUserInfo{}
-	_ = json.Unmarshal(j, &user)
 
 	if c.repo.Delete(user) != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -61,17 +57,13 @@ func (c *UserController) Delete(ctx *gin.Context) {
 }
 
 func (c *UserController) Get(ctx *gin.Context) {
-	claims, ok := ctx.Get("token-claims")
-	if !ok {
+	user, err := utils.ExtractJwtPayload(ctx)
+	if err {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Cant extract info from claims",
 		})
 		return
 	}
-
-	j, _ := json.Marshal(claims.(map[string]interface{}))
-	user := dto.BaseUserInfo{}
-	_ = json.Unmarshal(j, &user)
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"result": user,
