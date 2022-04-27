@@ -47,10 +47,11 @@ func (c *AuthController) Login(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, gin.H{
 				"token": token,
 			})
-		} else {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid auth info",
-			})
+			return
 		}
 	}
+
+	ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+		"error": "Invalid auth info",
+	})
 }
