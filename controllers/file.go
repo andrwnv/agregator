@@ -86,9 +86,11 @@ func (c *FileController) UploadAvatarMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
-			handleSaveError(ctx)
-			return
+		if _, ok := c.httpContentType[ext]; ok {
+			if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
+				handleSaveError(ctx)
+				return
+			}
 		}
 
 		ctx.Set("file-name", newFileName)
@@ -131,11 +133,14 @@ func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
 			ext := filepath.Ext(file.Filename)
 			newFileName := fmt.Sprintf("%s%s", uuid.New(), ext)
 
-			if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
-				handleSaveError(ctx)
-				return
+			if _, ok := c.httpContentType[ext]; ok {
+				if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
+					handleSaveError(ctx)
+					return
+				}
+
+				filesUrls = append(filesUrls, newFileName)
 			}
-			filesUrls = append(filesUrls, newFileName)
 		}
 
 		ctx.Set("file-names", filesUrls)
