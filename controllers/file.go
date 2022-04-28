@@ -126,6 +126,7 @@ func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		var filesUrls []string
 		for _, file := range files {
 			ext := filepath.Ext(file.Filename)
 			newFileName := fmt.Sprintf("%s%s", uuid.New(), ext)
@@ -134,8 +135,10 @@ func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
 				handleSaveError(ctx)
 				return
 			}
+			filesUrls = append(filesUrls, newFileName)
 		}
 
+		ctx.Set("file-names", filesUrls)
 		ctx.Next()
 	}
 }
