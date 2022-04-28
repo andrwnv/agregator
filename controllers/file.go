@@ -17,6 +17,12 @@ type FileController struct {
 	httpContentType map[string]string
 }
 
+func handleSaveError(ctx *gin.Context) {
+	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		"error": "Unable to save the file(s)",
+	})
+}
+
 func NewFileController(rootPath string) *FileController {
 	return &FileController{
 		DownloadPath: rootPath,
@@ -30,7 +36,8 @@ func NewFileController(rootPath string) *FileController {
 
 func (c *FileController) GetImage(ctx *gin.Context) {
 	fileName := ctx.Param("filename")
-	targetPath := filepath.Join(c.DownloadPath, fileName)
+	dirName := ctx.Query("uuid")
+	targetPath := filepath.Join(c.DownloadPath, dirName, fileName)
 
 	if !strings.HasPrefix(filepath.Clean(targetPath), c.DownloadPath) {
 		ctx.JSON(http.StatusForbidden, gin.H{
@@ -55,12 +62,6 @@ func (c *FileController) GetImage(ctx *gin.Context) {
 }
 
 func (c *FileController) UploadAvatarMiddleware() gin.HandlerFunc {
-	handleSaveError := func(ctx *gin.Context) {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "Unable to save the file(s)",
-		})
-	}
-
 	return func(ctx *gin.Context) {
 		user, parseErr := misc.ExtractJwtPayload(ctx)
 		if parseErr {
@@ -91,6 +92,50 @@ func (c *FileController) UploadAvatarMiddleware() gin.HandlerFunc {
 		}
 
 		ctx.Set("file-name", newFileName)
+		ctx.Next()
+	}
+}
+
+func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		user, parseErr := misc.ExtractJwtPayload(ctx)
+		if parseErr {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Cant extract info from claims",
+			})
+			return
+		}
+
+		form, err := ctx.MultipartForm()
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Cant extract images",
+			})
+			return
+		}
+
+		files := form.File["files"]
+		if len(files) == 0 {
+			ctx.Next()
+			return
+		}
+
+		pathForSave := path.Join(c.DownloadPath, user.ID)
+		if os.MkdirAll(pathForSave, os.ModePerm) != nil {
+			handleSaveError(ctx)
+			return
+		}
+
+		for _, file := range files {
+			ext := filepath.Ext(file.Filename)
+			newFileName := fmt.Sprintf("%s%s", uuid.New(), ext)
+
+			if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
+				handleSaveError(ctx)
+				return
+			}
+		}
+
 		ctx.Next()
 	}
 }
