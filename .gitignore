@@ -119,9 +119,6 @@ dist
 .idea/
 container/
 
-user-service/files/
-!user-service/files/default_avatar.jpg
-
 files/*
 !files/README.md
 !files/default_avatar.png

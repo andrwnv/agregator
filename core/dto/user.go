@@ -16,3 +16,11 @@ type CreateUser struct {
 	Email      string `json:"email"`
 	Password   string `json:"password"`
 }
+
+type UpdateUser struct {
+	FirstName  string `json:"first_name"`
+	SecondName string `json:"second_name"`
+	BirthDay   int    `json:"birth_day,omitempty"`
+	Password   string `json:"password"`
+	PhotoUrl   string `json:"photo_url"`
+}

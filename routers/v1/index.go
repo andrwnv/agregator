@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"github.com/andrwnv/event-aggregator/controllers"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,8 @@ func NewController(
 
 func SayHello(c *gin.Context) {
 	c.JSON(http.StatusOK, "Hello.")
+
+	fmt.Printf("%v\n", c.GetStringSlice("file-names"))
 }
 
 // TODO: Make main router. Router != controller, controller is deps to router.
@@ -37,14 +40,14 @@ func (c *Controllers) MakeRoutes() *gin.Engine {
 	apiV1 := r.Group("/api/v1")
 	apiV1.Use(middleware.CORSMiddleware())
 	{
-		apiV1.GET("/say_hello", SayHello)
+		apiV1.GET("/say_hello", middleware.AuthorizeJWTMiddleware(), c.fileController.UploadImagesMiddleware(), SayHello)
 
 		userGroup := apiV1.Group("/user")
 		{
 			userGroup.POST("/create", c.userController.Create)
 			userGroup.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), c.userController.Delete)
 			userGroup.GET("/me", middleware.AuthorizeJWTMiddleware(), c.userController.Get)
-			userGroup.PATCH("/update", middleware.AuthorizeJWTMiddleware(), c.fileController.UploadAvatarMiddleware(), c.userController.Update)
+			userGroup.PATCH("/update", middleware.AuthorizeJWTMiddleware(), c.userController.Update)
 		}
 
 		authGroup := apiV1.Group("/auth")
@@ -54,10 +57,11 @@ func (c *Controllers) MakeRoutes() *gin.Engine {
 
 		fileGroup := apiV1.Group("/file")
 		{
-			fileGroup.GET("/receive/:filename", c.fileController.GetImage)
+			fileGroup.PATCH("/update_avatar", middleware.AuthorizeJWTMiddleware(), c.fileController.UploadAvatar)
+			fileGroup.GET("/img/:filename", c.fileController.GetImage)
 		}
 	}
-
+	
 	r.NoRoute(func(c *gin.Context) {
 		c.AbortWithStatusJSON(404, "Not found")
 	})

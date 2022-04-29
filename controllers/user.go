@@ -19,9 +19,7 @@ func NewUserController(r *repo.UserRepo) *UserController {
 func (c *UserController) Create(ctx *gin.Context) {
 	var _dto dto.CreateUser
 	if err := ctx.BindJSON(&_dto); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Incorrect request body!",
-		})
+		misc.IncorrectRequestBodyResponse(ctx)
 		return
 	}
 
@@ -38,15 +36,13 @@ func (c *UserController) Create(ctx *gin.Context) {
 }
 
 func (c *UserController) Delete(ctx *gin.Context) {
-	user, err := misc.ExtractJwtPayload(ctx)
+	payload, err := misc.ExtractJwtPayload(ctx)
 	if err {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Cant extract info from claims",
-		})
+		misc.FailedClaimsExtractResponse(ctx)
 		return
 	}
 
-	if c.repo.Delete(user) != nil {
+	if c.repo.Delete(payload) != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Something went wrong",
 		})
@@ -57,24 +53,44 @@ func (c *UserController) Delete(ctx *gin.Context) {
 }
 
 func (c *UserController) Get(ctx *gin.Context) {
-	user, err := misc.ExtractJwtPayload(ctx)
+	payload, err := misc.ExtractJwtPayload(ctx)
 	if err {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Cant extract info from claims",
-		})
+		misc.FailedClaimsExtractResponse(ctx)
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"result": user,
+		"result": payload,
 	})
 }
 
 func (c *UserController) Update(ctx *gin.Context) {
-	val := ctx.GetString("file-name")
-	misc.ReportInfo(val)
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if extractErr {
+		misc.FailedClaimsExtractResponse(ctx)
+		return
+	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"result": "test",
+	user, err := c.repo.GetByEmail(payload.Email)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Cant extract user from database",
+		})
+		return
+	}
+
+	updateDto := repo.ToUpdateDto(user)
+	_ = ctx.BindJSON(&updateDto)
+
+	result, err := c.repo.Update(user.ID, updateDto)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Cant update user info!",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"result": result,
 	})
 }

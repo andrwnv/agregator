@@ -29,7 +29,7 @@ func init() {
 
 	userController := controllers.NewUserController(userRepo)
 	autoController := controllers.NewAuthController(userRepo)
-	fileController := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"))
+	fileController := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userRepo)
 
 	controller := v1.NewController(userController, autoController, fileController)
 	core.SERVER = &core.Server{

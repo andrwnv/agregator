@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/andrwnv/event-aggregator/core/repo"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,18 +15,20 @@ import (
 
 type FileController struct {
 	DownloadPath    string
+	userRepo        *repo.UserRepo
 	httpContentType map[string]string
 }
 
 func handleSaveError(ctx *gin.Context) {
-	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
 		"error": "Unable to save the file(s)",
 	})
 }
 
-func NewFileController(rootPath string) *FileController {
+func NewFileController(rootPath string, userRepo *repo.UserRepo) *FileController {
 	return &FileController{
 		DownloadPath: rootPath,
+		userRepo:     userRepo,
 		httpContentType: map[string]string{
 			".jpg": "image/jpeg",
 			".png": "image/png",
@@ -61,58 +64,70 @@ func (c *FileController) GetImage(ctx *gin.Context) {
 	ctx.Status(http.StatusNotModified)
 }
 
-func (c *FileController) UploadAvatarMiddleware() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		user, parseErr := misc.ExtractJwtPayload(ctx)
-		if parseErr {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "Cant extract info from claims",
-			})
-			return
-		}
+func (c *FileController) UploadAvatar(ctx *gin.Context) {
+	payload, parseErr := misc.ExtractJwtPayload(ctx)
+	if parseErr {
+		misc.FailedClaimsExtractResponse(ctx)
+		return
+	}
 
-		file, err := ctx.FormFile("file")
-		if err != nil {
-			ctx.Next()
-			return
-		}
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		misc.IncorrectRequestBodyResponse(ctx)
+		return
+	}
 
-		ext := filepath.Ext(file.Filename)
-		newFileName := fmt.Sprintf("%s%s", uuid.New(), ext)
+	ext := filepath.Ext(file.Filename)
+	newFileName := fmt.Sprintf("%s%s", uuid.New(), ext)
 
-		pathForSave := path.Join(c.DownloadPath, user.ID)
-		if os.MkdirAll(pathForSave, os.ModePerm) != nil {
+	pathForSave := path.Join(c.DownloadPath, payload.ID)
+	if os.MkdirAll(pathForSave, os.ModePerm) != nil {
+		handleSaveError(ctx)
+		return
+	}
+
+	if _, ok := c.httpContentType[ext]; ok {
+		if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
 			handleSaveError(ctx)
 			return
 		}
-
-		if _, ok := c.httpContentType[ext]; ok {
-			if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
-				handleSaveError(ctx)
-				return
-			}
-		}
-
-		ctx.Set("file-name", newFileName)
-		ctx.Next()
 	}
+
+	user, err := c.userRepo.GetByEmail(payload.Email)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Cant extract user from database",
+		})
+		return
+	}
+
+	updateDto := repo.ToUpdateDto(user)
+	updateDto.PhotoUrl = newFileName
+	result, err := c.userRepo.Update(uuid.MustParse(payload.ID), updateDto)
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Cant update user info!",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"result": result,
+	})
 }
 
 func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, parseErr := misc.ExtractJwtPayload(ctx)
+		payload, parseErr := misc.ExtractJwtPayload(ctx)
 		if parseErr {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "Cant extract info from claims",
-			})
+			misc.FailedClaimsExtractResponse(ctx)
 			return
 		}
 
 		form, err := ctx.MultipartForm()
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "Cant extract images",
-			})
+			misc.IncorrectRequestBodyResponse(ctx)
 			return
 		}
 
@@ -122,7 +137,7 @@ func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		pathForSave := path.Join(c.DownloadPath, user.ID)
+		pathForSave := path.Join(c.DownloadPath, payload.ID)
 		if os.MkdirAll(pathForSave, os.ModePerm) != nil {
 			handleSaveError(ctx)
 			return

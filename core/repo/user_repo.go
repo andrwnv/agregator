@@ -27,18 +27,18 @@ type UserRepoCrud interface {
 	Create(dto dto.CreateUser) error
 	Delete(dto dto.BaseUserInfo) error
 	GetByEmail(email string) (User, error)
-	// Update(dto ...) error
+	Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserInfo, error)
 }
 
 type UserRepo struct {
-	Repo *PgRepo
+	repo *PgRepo
 }
 
 func NewUserRepo(repo *PgRepo) *UserRepo {
 	_ = repo.Database.AutoMigrate(&User{})
 
 	return &UserRepo{
-		Repo: repo,
+		repo: repo,
 	}
 }
 
@@ -46,7 +46,7 @@ func (repo *UserRepo) Create(dto dto.CreateUser) error {
 	passHash := sha1.New()
 	passHash.Write([]byte(dto.Password))
 
-	return repo.Repo.Database.Create(&User{
+	return repo.repo.Database.Create(&User{
 		ID:        uuid.New(),
 		FirstName: dto.FirstName,
 		LastName:  dto.SecondName,
@@ -56,12 +56,25 @@ func (repo *UserRepo) Create(dto dto.CreateUser) error {
 }
 
 func (repo *UserRepo) Delete(dto dto.BaseUserInfo) error {
-	return repo.Repo.Database.Exec("DELETE FROM users WHERE id = ?", dto.ID).Error
+	return repo.repo.Database.Exec("DELETE FROM users WHERE id = ?", dto.ID).Error
 }
 
 func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
-	err = repo.Repo.Database.Where("email = ?", email).First(&user).Error
+	err = repo.repo.Database.Where("email = ?", email).First(&user).Error
 	return user, err
+}
+
+func (repo *UserRepo) Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserInfo, error) {
+	var user User
+	repo.repo.Database.Where("id = ?", uuid).First(&user)
+
+	user.FirstName = dto.FirstName
+	user.LastName = dto.SecondName
+	user.BirthDay = dto.BirthDay
+	user.Password = dto.Password
+	user.PhotoUrl = dto.PhotoUrl
+
+	return To(user), repo.repo.Database.Save(&user).Error
 }
 
 // ----- Conversations -----
@@ -74,5 +87,16 @@ func To(user User) dto.BaseUserInfo {
 		Email:      user.Email,
 		BirthDay:   user.BirthDay,
 		Verified:   user.Verified,
+		PhotoUrl:   user.PhotoUrl,
+	}
+}
+
+func ToUpdateDto(user User) dto.UpdateUser {
+	return dto.UpdateUser{
+		FirstName:  user.FirstName,
+		SecondName: user.LastName,
+		BirthDay:   user.BirthDay,
+		Password:   user.Password,
+		PhotoUrl:   user.PhotoUrl,
 	}
 }
