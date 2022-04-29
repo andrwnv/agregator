@@ -21,5 +21,6 @@ func (router *UserRouter) Make(rootGroup *gin.RouterGroup) {
 		group.GET("/me", middleware.AuthorizeJWTMiddleware(), router.userController.Get)
 		group.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), router.userController.Delete)
 		group.PATCH("/update", middleware.AuthorizeJWTMiddleware(), router.userController.Update)
+		group.GET("/verify/:id", router.userController.Verify)
 	}
 }

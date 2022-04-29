@@ -3,17 +3,23 @@ package controllers
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/services"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
 )
 
 type UserController struct {
-	repo *repo.UserRepo
+	repo   *repo.UserRepo
+	mailer *services.Mailer
 }
 
-func NewUserController(r *repo.UserRepo) *UserController {
-	return &UserController{repo: r}
+func NewUserController(r *repo.UserRepo, mailer *services.Mailer) *UserController {
+	return &UserController{
+		repo:   r,
+		mailer: mailer,
+	}
 }
 
 func (c *UserController) Create(ctx *gin.Context) {
@@ -23,7 +29,8 @@ func (c *UserController) Create(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.repo.Create(_dto); err != nil {
+	user, err := c.repo.Create(_dto)
+	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{
 			"error": "User already exists!",
 		})
@@ -33,6 +40,14 @@ func (c *UserController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{
 		"result": "Successful create, Welcome!",
 	})
+
+	go func() {
+		to := []string{user.Email}
+		err := c.mailer.SendVerifyEmail(to, user.ID.String())
+		if err != nil {
+			misc.ReportError("Cant sent verify email")
+		}
+	}()
 }
 
 func (c *UserController) Delete(ctx *gin.Context) {
@@ -92,5 +107,27 @@ func (c *UserController) Update(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusAccepted, gin.H{
 		"result": result,
+	})
+}
+
+func (c *UserController) Verify(ctx *gin.Context) {
+	id := ctx.Param("id")
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"error": "Look like you attacking me",
+		})
+		return
+	}
+
+	if err := c.repo.Verify(uuid); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Something went wrong. Try later",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": "User verified",
 	})
 }

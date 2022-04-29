@@ -24,10 +24,11 @@ type User struct {
 // ----- UserRepo methods -----
 
 type UserRepoCrud interface {
-	Create(dto dto.CreateUser) error
+	Create(dto dto.CreateUser) (user User, err error)
 	Delete(dto dto.BaseUserInfo) error
 	GetByEmail(email string) (User, error)
 	Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserInfo, error)
+	Verify(uuid uuid.UUID) error
 }
 
 type UserRepo struct {
@@ -42,17 +43,19 @@ func NewUserRepo(repo *PgRepo) *UserRepo {
 	}
 }
 
-func (repo *UserRepo) Create(dto dto.CreateUser) error {
+func (repo *UserRepo) Create(dto dto.CreateUser) (user User, err error) {
 	passHash := sha1.New()
 	passHash.Write([]byte(dto.Password))
 
-	return repo.repo.Database.Create(&User{
+	user = User{
 		ID:        uuid.New(),
 		FirstName: dto.FirstName,
 		LastName:  dto.SecondName,
 		Email:     dto.Email,
 		Password:  hex.EncodeToString(passHash.Sum(nil)),
-	}).Error
+	}
+
+	return user, repo.repo.Database.Create(&user).Error
 }
 
 func (repo *UserRepo) Delete(dto dto.BaseUserInfo) error {
@@ -75,6 +78,14 @@ func (repo *UserRepo) Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserIn
 	user.PhotoUrl = dto.PhotoUrl
 
 	return To(user), repo.repo.Database.Save(&user).Error
+}
+
+func (repo *UserRepo) Verify(uuid uuid.UUID) error {
+	var user User
+	repo.repo.Database.Where("id = ?", uuid).First(&user)
+	user.Verified = true
+
+	return repo.repo.Database.Save(&user).Error
 }
 
 // ----- Conversations -----
