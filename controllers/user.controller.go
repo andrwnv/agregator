@@ -111,8 +111,7 @@ func (c *UserController) Update(ctx *gin.Context) {
 }
 
 func (c *UserController) Verify(ctx *gin.Context) {
-	id := ctx.Param("id")
-	uuid, err := uuid.Parse(id)
+	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{
 			"error": "Look like you attacking me",
@@ -120,7 +119,7 @@ func (c *UserController) Verify(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.repo.Verify(uuid); err != nil {
+	if err := c.repo.Verify(id); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Something went wrong. Try later",
 		})
