@@ -31,9 +31,10 @@ func init() {
 	autoController := controllers.NewAuthController(userRepo)
 	fileController := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userRepo)
 
-	controller := v1.NewController(userController, autoController, fileController)
+	router := v1.MakeRouter(userController, autoController, fileController)
+
 	core.SERVER = &core.Server{
-		Router:     controller.MakeRoutes(),
+		Router:     router.InitRouter(),
 		JwtService: services.JWTAuthService(),
 	}
 }
