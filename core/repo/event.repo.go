@@ -88,7 +88,7 @@ func (repo *EventRepo) Create(dto dto.CreateEvent, user User, region Region) (Ev
 }
 
 func (repo *EventRepo) Get(id uuid.UUID) (event Event, err error) {
-	return event, repo.repo.Database.Preload("CreatedBy").Where("id = ?", id).First(&event).Error
+	return event, repo.repo.Database.Preload("CreatedBy").Preload("Region").Where("id = ?", id).First(&event).Error
 }
 
 // ----- Conversations -----
