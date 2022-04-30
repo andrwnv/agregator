@@ -90,5 +90,38 @@ func (c *EventController) Update(ctx *gin.Context) {
 }
 
 func (c *EventController) Delete(ctx *gin.Context) {
+	param := ctx.Param("event_id")
+	eventId, err := uuid.Parse(param)
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"error": "Look like you attacking me",
+		})
+		return
+	}
+
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if extractErr {
+		misc.FailedClaimsExtractResponse(ctx)
+		return
+	}
+
+	event, err := c.eventRepo.Get(eventId)
+	if err != nil {
+		ctx.Status(http.StatusNoContent)
+		return
+	}
+
+	if payload.ID != event.CreatedBy.ID.String() {
+		ctx.Status(http.StatusForbidden)
+		return
+	}
+
+	deleteErr := c.eventRepo.Delete(eventId)
+	if deleteErr != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Cant delete event, try later.",
+		})
+		return
+	}
 	ctx.Status(http.StatusOK)
 }

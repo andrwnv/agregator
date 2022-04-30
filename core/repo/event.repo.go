@@ -53,6 +53,7 @@ type EventPhoto struct {
 type EventRepoCrud interface {
 	Create(dto dto.CreateEvent, u User, region Region) (Event, error)
 	Get(id uuid.UUID) (Event, error)
+	Delete(id uuid.UUID) error
 }
 
 type EventRepo struct {
@@ -89,6 +90,10 @@ func (repo *EventRepo) Create(dto dto.CreateEvent, user User, region Region) (Ev
 
 func (repo *EventRepo) Get(id uuid.UUID) (event Event, err error) {
 	return event, repo.repo.Database.Preload("CreatedBy").Preload("Region").Where("id = ?", id).First(&event).Error
+}
+
+func (repo *EventRepo) Delete(id uuid.UUID) error {
+	return repo.repo.Database.Exec("DELETE FROM events WHERE id = ?", id).Error
 }
 
 // ----- Conversations -----

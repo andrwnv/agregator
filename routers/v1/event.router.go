@@ -22,6 +22,6 @@ func (router *EventRouter) Make(rootGroup *gin.RouterGroup) {
 		group.GET("/:id", router.eventController.Get)
 		group.POST("/create", middleware.AuthorizeJWTMiddleware(), router.eventController.Create)
 		group.PATCH("/update", middleware.AuthorizeJWTMiddleware(), router.eventController.Update)
-		group.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), router.eventController.Delete)
+		group.DELETE("/delete/:event_id", middleware.AuthorizeJWTMiddleware(), router.eventController.Delete)
 	}
 }
