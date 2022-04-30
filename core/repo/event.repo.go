@@ -10,19 +10,19 @@ import (
 type Event struct {
 	gorm.Model
 
-	ID              uuid.UUID  `gorm:"primaryKey"`
-	BeginDate       time.Time  `gorm:"not null"`
-	EndDate         time.Time  `gorm:"not null"`
-	PaymentRequired bool       `gorm:"default: false"`
-	CreatedByID     uuid.UUID  `gorm:"not null"`
-	Title           string     `gorm:"not null"`
-	Description     string     `gorm:"not null"`
-	Longitude       float32    `gorm:"not null"`
-	Latitude        float32    `gorm:"not null"`
-	RegionID        *uuid.UUID `gorm:"null"`
+	ID              uuid.UUID `gorm:"primaryKey"`
+	BeginDate       time.Time `gorm:"not null"`
+	EndDate         time.Time `gorm:"not null"`
+	PaymentRequired bool      `gorm:"default: false"`
+	CreatedByID     uuid.UUID `gorm:"not null"`
+	Title           string    `gorm:"not null"`
+	Description     string    `gorm:"not null"`
+	Longitude       float32   `gorm:"not null"`
+	Latitude        float32   `gorm:"not null"`
+	RegionID        uuid.UUID `gorm:"not null"`
 
-	Region    *Region `gorm:"foreignKey:RegionID;references:ID"`
-	CreatedBy User    `gorm:"foreignKey:CreatedByID;references:ID"`
+	Region    Region `gorm:"foreignKey:RegionID;references:ID"`
+	CreatedBy User   `gorm:"foreignKey:CreatedByID;references:ID"`
 }
 
 type EventComment struct {
@@ -51,7 +51,7 @@ type EventPhoto struct {
 // ----- EventRepo methods -----
 
 type EventRepoCrud interface {
-	Create(dto dto.CreateEvent, u User) (Event, error)
+	Create(dto dto.CreateEvent, u User, region Region) (Event, error)
 	Get(id uuid.UUID) (Event, error)
 }
 
@@ -67,21 +67,24 @@ func NewEventRepo(repo *PgRepo) *EventRepo {
 	}
 }
 
-func (repo *EventRepo) Create(dto dto.CreateEvent, u User) (Event, error) {
+func (repo *EventRepo) Create(dto dto.CreateEvent, user User, region Region) (Event, error) {
 	event := Event{
 		ID:              uuid.New(),
 		BeginDate:       time.Unix(dto.BeginDate, 0),
 		EndDate:         time.Unix(dto.EndDate, 0),
 		PaymentRequired: false,
-		CreatedByID:     u.ID,
-		CreatedBy:       u,
+		CreatedByID:     user.ID,
 		Title:           dto.Title,
 		Description:     dto.Description,
 		Longitude:       dto.Longitude,
 		Latitude:        dto.Latitude,
+		RegionID:        region.ID,
+
+		CreatedBy: user,
+		Region:    region,
 	}
 
-	return event, repo.repo.Database.Create(&event).Error
+	return event, repo.repo.Database.Table("events").Create(&event).Error
 }
 
 func (repo *EventRepo) Get(id uuid.UUID) (event Event, err error) {
@@ -102,5 +105,6 @@ func EventToEvent(event Event) dto.EventDto {
 		Longitude:       event.Longitude,
 		Latitude:        event.Latitude,
 		CreatedBy:       UserToBaseUser(event.CreatedBy),
+		RegionInfo:      RegionToRegion(event.Region),
 	}
 }

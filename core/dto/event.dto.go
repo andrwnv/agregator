@@ -12,6 +12,7 @@ type EventDto struct {
 	Longitude       float32      `json:"longitude"`
 	Latitude        float32      `json:"latitude"`
 	CreatedBy       BaseUserInfo `json:"created_by"`
+	RegionInfo      RegionDto    `json:"region_info"`
 }
 
 type CreateEvent struct {
@@ -22,4 +23,5 @@ type CreateEvent struct {
 	Description     string  `json:"description"`
 	Longitude       float32 `json:"longitude"`
 	Latitude        float32 `json:"latitude"`
+	RegionID        string  `json:"region_id"`
 }

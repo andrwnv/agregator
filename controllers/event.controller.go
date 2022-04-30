@@ -45,7 +45,13 @@ func (c *EventController) Create(ctx *gin.Context) {
 		return
 	}
 
-	event, err := c.eventRepo.Create(createDto, user)
+	region, err := c.regionRepo.GetByRegionID(createDto.RegionID)
+	if err != nil {
+		misc.IncorrectRequestBodyResponse(ctx)
+		return
+	}
+
+	event, err := c.eventRepo.Create(createDto, user, region)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Cant create event, try later.",
