@@ -1,13 +1,25 @@
 package dto
 
-import "time"
+import "github.com/google/uuid"
+
+type EventDto struct {
+	ID              uuid.UUID    `json:"id"`
+	BeginDate       int64        `json:"begin_date"`
+	EndDate         int64        `json:"end_date"`
+	PaymentRequired bool         `json:"payment_required"`
+	Title           string       `json:"title"`
+	Description     string       `json:"description"`
+	Longitude       float32      `json:"longitude"`
+	Latitude        float32      `json:"latitude"`
+	CreatedBy       BaseUserInfo `json:"created_by"`
+}
 
 type CreateEvent struct {
-	BeginDate       time.Time `json:"begin_date"`
-	EndDate         time.Time `json:"end_date"`
-	PaymentRequired bool      `json:"payment_required"`
-	Title           string    `json:"title"`
-	Description     string    `json:"description"`
-	Longitude       float32   `json:"longitude"`
-	Latitude        float32   `json:"latitude"`
+	BeginDate       int64   `json:"begin_date"`
+	EndDate         int64   `json:"end_date"`
+	PaymentRequired bool    `json:"payment_required"`
+	Title           string  `json:"title"`
+	Description     string  `json:"description"`
+	Longitude       float32 `json:"longitude"`
+	Latitude        float32 `json:"latitude"`
 }

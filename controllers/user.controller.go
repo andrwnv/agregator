@@ -74,7 +74,7 @@ func (c *UserController) Get(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"result": payload,
 	})
 }
@@ -94,7 +94,7 @@ func (c *UserController) Update(ctx *gin.Context) {
 		return
 	}
 
-	updateDto := repo.ToUpdateDto(user)
+	updateDto := repo.UserToUpdateUserDto(user)
 	_ = ctx.BindJSON(&updateDto)
 
 	result, err := c.repo.Update(user.ID, updateDto)

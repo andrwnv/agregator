@@ -42,7 +42,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	isUserAuthenticated := services.Login(credential, info)
 	if isUserAuthenticated {
-		token := core.SERVER.JwtService.GenerateToken(credential.Email, repo.To(user))
+		token := core.SERVER.JwtService.GenerateToken(credential.Email, repo.UserToBaseUser(user))
 		if token != "" {
 			ctx.JSON(http.StatusOK, gin.H{
 				"token": token,

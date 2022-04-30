@@ -25,8 +25,9 @@ type User struct {
 
 type UserRepoCrud interface {
 	Create(dto dto.CreateUser) (user User, err error)
-	Delete(dto dto.BaseUserInfo) error
+	Get(uuid uuid.UUID) (dto.BaseUserInfo, error)
 	GetByEmail(email string) (User, error)
+	Delete(dto dto.BaseUserInfo) error
 	Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserInfo, error)
 	Verify(uuid uuid.UUID) error
 }
@@ -67,6 +68,11 @@ func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
 	return user, err
 }
 
+func (repo *UserRepo) Get(uuid uuid.UUID) (u dto.BaseUserInfo, err error) {
+	err = repo.repo.Database.Where("id = ?", uuid).First(&u).Error
+	return u, err
+}
+
 func (repo *UserRepo) Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserInfo, error) {
 	var user User
 	repo.repo.Database.Where("id = ?", uuid).First(&user)
@@ -77,7 +83,7 @@ func (repo *UserRepo) Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserIn
 	user.Password = dto.Password
 	user.PhotoUrl = dto.PhotoUrl
 
-	return To(user), repo.repo.Database.Save(&user).Error
+	return UserToBaseUser(user), repo.repo.Database.Save(&user).Error
 }
 
 func (repo *UserRepo) Verify(uuid uuid.UUID) error {
@@ -90,7 +96,7 @@ func (repo *UserRepo) Verify(uuid uuid.UUID) error {
 
 // ----- Conversations -----
 
-func To(user User) dto.BaseUserInfo {
+func UserToBaseUser(user User) dto.BaseUserInfo {
 	return dto.BaseUserInfo{
 		ID:         user.ID.String(),
 		FirstName:  user.FirstName,
@@ -102,7 +108,7 @@ func To(user User) dto.BaseUserInfo {
 	}
 }
 
-func ToUpdateDto(user User) dto.UpdateUser {
+func UserToUpdateUserDto(user User) dto.UpdateUser {
 	return dto.UpdateUser{
 		FirstName:  user.FirstName,
 		SecondName: user.LastName,

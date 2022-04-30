@@ -7,19 +7,23 @@ import (
 )
 
 type Router struct {
-	userRouter *UserRouter
-	fileRouter *FileRouter
-	authRouter *AuthRouter
+	userRouter  *UserRouter
+	fileRouter  *FileRouter
+	authRouter  *AuthRouter
+	eventRouter *EventRouter
 }
 
-func MakeRouter(userCtrl *controllers.UserController,
+func MakeRouter(
+	userCtrl *controllers.UserController,
 	authCtrl *controllers.AuthController,
-	fileCtrl *controllers.FileController) *Router {
+	fileCtrl *controllers.FileController,
+	eventCtrl *controllers.EventController) *Router {
 
 	return &Router{
-		userRouter: MakeUserRouter(userCtrl),
-		fileRouter: MakeFileRouter(fileCtrl),
-		authRouter: MakeAuthRouter(authCtrl),
+		userRouter:  MakeUserRouter(userCtrl),
+		fileRouter:  MakeFileRouter(fileCtrl),
+		authRouter:  MakeAuthRouter(authCtrl),
+		eventRouter: MakeEventRouter(eventCtrl),
 	}
 }
 
@@ -33,6 +37,7 @@ func (router *Router) InitRouter() *gin.Engine {
 		router.userRouter.Make(v1Group)
 		router.authRouter.Make(v1Group)
 		router.fileRouter.Make(v1Group)
+		router.eventRouter.Make(v1Group)
 	}
 
 	engine.NoRoute(func(c *gin.Context) {

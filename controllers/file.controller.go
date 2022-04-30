@@ -101,7 +101,7 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 		return
 	}
 
-	updateDto := repo.ToUpdateDto(user)
+	updateDto := repo.UserToUpdateUserDto(user)
 	updateDto.PhotoUrl = newFileName
 	result, err := c.userRepo.Update(uuid.MustParse(payload.ID), updateDto)
 
