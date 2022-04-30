@@ -10,15 +10,19 @@ import (
 )
 
 type EventController struct {
-	eventRepo *repo.EventRepo
-	userRepo  *repo.UserRepo
+	eventRepo  *repo.EventRepo
+	userRepo   *repo.UserRepo
+	regionRepo *repo.RegionRepo
 }
 
-func NewEventController(r *repo.EventRepo,
-	ur *repo.UserRepo) *EventController {
+func NewEventController(eventRepo *repo.EventRepo,
+	userRepo *repo.UserRepo,
+	regionRepo *repo.RegionRepo) *EventController {
+
 	return &EventController{
-		eventRepo: r,
-		userRepo:  ur,
+		eventRepo:  eventRepo,
+		userRepo:   userRepo,
+		regionRepo: regionRepo,
 	}
 }
 

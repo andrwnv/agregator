@@ -22,10 +22,10 @@ func init() {
 
 	globalRepo := repo.NewPgRepo()
 	userRepo := repo.NewUserRepo(globalRepo)
+	regionRepo := repo.NewRegionRepo(globalRepo)
 	eventRepo := repo.NewEventRepo(globalRepo)
 	_ = repo.NewPlaceRepo(globalRepo)
 	_ = repo.NewUserStoryRepo(globalRepo)
-	_ = repo.NewRegionRepo(globalRepo)
 
 	mailer := services.MakeMailer(
 		os.Getenv("SMTP_HOST"),
@@ -37,7 +37,7 @@ func init() {
 		controllers.NewUserController(userRepo, mailer),
 		controllers.NewAuthController(userRepo),
 		controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userRepo),
-		controllers.NewEventController(eventRepo, userRepo))
+		controllers.NewEventController(eventRepo, userRepo, regionRepo))
 
 	core.SERVER = &core.Server{
 		Router:     router.InitRouter(),
