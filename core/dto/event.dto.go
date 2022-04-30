@@ -16,12 +16,12 @@ type EventDto struct {
 }
 
 type CreateEvent struct {
-	BeginDate       int64   `json:"begin_date"`
-	EndDate         int64   `json:"end_date"`
-	PaymentRequired bool    `json:"payment_required"`
-	Title           string  `json:"title"`
-	Description     string  `json:"description"`
-	Longitude       float32 `json:"longitude"`
-	Latitude        float32 `json:"latitude"`
-	RegionID        string  `json:"region_id"`
+	BeginDate       int64   `json:"begin_date" binding:"required"`
+	EndDate         int64   `json:"end_date" binding:"required"`
+	PaymentRequired bool    `json:"payment_required" binding:"required"`
+	Title           string  `json:"title" binding:"required"`
+	Description     string  `json:"description" binding:"required"`
+	Longitude       float32 `json:"longitude" binding:"required"`
+	Latitude        float32 `json:"latitude" binding:"required"`
+	RegionID        string  `json:"region_id" binding:"required"`
 }

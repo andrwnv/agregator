@@ -5,6 +5,7 @@ import (
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/repo"
 	"github.com/andrwnv/event-aggregator/core/services"
+	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -20,28 +21,21 @@ func NewAuthController(r *repo.UserRepo) *AuthController {
 func (c *AuthController) Login(ctx *gin.Context) {
 	var credential dto.LoginCredentials
 	err := ctx.ShouldBind(&credential)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Incorrect request body!",
-		})
+	if misc.HandleError(ctx, err, http.StatusBadRequest, "Incorrect request body") {
 		return
 	}
 
 	user, err := c.repo.GetByEmail(credential.Email)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error": "Invalid auth info",
-		})
+	if misc.HandleError(ctx, err, http.StatusUnauthorized) {
 		return
 	}
 
-	info := services.LoginInfo{
+	authSuccess := services.Login(credential, services.LoginInfo{
 		Email:    user.Email,
 		Password: user.Password,
-	}
+	})
 
-	isUserAuthenticated := services.Login(credential, info)
-	if isUserAuthenticated {
+	if authSuccess {
 		token := core.SERVER.JwtService.GenerateToken(credential.Email, repo.UserToBaseUser(user))
 		if token != "" {
 			ctx.JSON(http.StatusOK, gin.H{

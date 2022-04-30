@@ -28,34 +28,27 @@ func NewEventController(eventRepo *repo.EventRepo,
 
 func (c *EventController) Create(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
-	if extractErr {
-		misc.FailedClaimsExtractResponse(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
 	}
 
 	var createDto dto.CreateEvent
-	if err := ctx.BindJSON(&createDto); err != nil {
-		misc.IncorrectRequestBodyResponse(ctx)
+	if misc.HandleError(ctx, ctx.BindJSON(&createDto), http.StatusBadRequest, "Incorrect request body.") {
 		return
 	}
 
 	user, err := c.userRepo.GetByEmail(payload.Email)
-	if err != nil {
-		misc.FailedClaimsExtractResponse(ctx)
+	if misc.HandleError(ctx, err, http.StatusInternalServerError) {
 		return
 	}
 
 	region, err := c.regionRepo.GetByRegionID(createDto.RegionID)
-	if err != nil {
-		misc.IncorrectRequestBodyResponse(ctx)
+	if misc.HandleError(ctx, err, http.StatusBadRequest, "Cant find selected country.") {
 		return
 	}
 
 	event, err := c.eventRepo.Create(createDto, user, region)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Cant create event, try later.",
-		})
+	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant create event, try later.") {
 		return
 	}
 
@@ -65,18 +58,13 @@ func (c *EventController) Create(ctx *gin.Context) {
 }
 
 func (c *EventController) Get(ctx *gin.Context) {
-	param := ctx.Param("id")
-	id, err := uuid.Parse(param)
-	if err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"error": "Look like you attacking me",
-		})
+	id, err := uuid.Parse(ctx.Param("id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
 		return
 	}
 
 	event, err := c.eventRepo.Get(id)
-	if err != nil {
-		ctx.Status(http.StatusNotFound)
+	if misc.HandleError(ctx, err, http.StatusNotFound, "Event not found") {
 		return
 	}
 
@@ -90,24 +78,18 @@ func (c *EventController) Update(ctx *gin.Context) {
 }
 
 func (c *EventController) Delete(ctx *gin.Context) {
-	param := ctx.Param("event_id")
-	eventId, err := uuid.Parse(param)
-	if err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"error": "Look like you attacking me",
-		})
+	eventId, err := uuid.Parse(ctx.Param("event_id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
 		return
 	}
 
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
-	if extractErr {
-		misc.FailedClaimsExtractResponse(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
 	}
 
 	event, err := c.eventRepo.Get(eventId)
-	if err != nil {
-		ctx.Status(http.StatusNoContent)
+	if misc.HandleError(ctx, err, http.StatusNoContent) {
 		return
 	}
 
@@ -116,12 +98,9 @@ func (c *EventController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	deleteErr := c.eventRepo.Delete(eventId)
-	if deleteErr != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Cant delete event, try later.",
-		})
+	if misc.HandleError(ctx, c.eventRepo.Delete(eventId), http.StatusInternalServerError, "Cant delete event, try later.") {
 		return
 	}
+
 	ctx.Status(http.StatusOK)
 }

@@ -24,16 +24,12 @@ func NewUserController(r *repo.UserRepo, mailer *services.Mailer) *UserControlle
 
 func (c *UserController) Create(ctx *gin.Context) {
 	var _dto dto.CreateUser
-	if err := ctx.BindJSON(&_dto); err != nil {
-		misc.IncorrectRequestBodyResponse(ctx)
+	if misc.HandleError(ctx, ctx.BindJSON(&_dto), http.StatusBadRequest, "Incorrect request body.") {
 		return
 	}
 
 	user, err := c.repo.Create(_dto)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{
-			"error": "User already exists!",
-		})
+	if misc.HandleError(ctx, err, http.StatusConflict, "User already exists!") {
 		return
 	}
 
@@ -45,22 +41,18 @@ func (c *UserController) Create(ctx *gin.Context) {
 		to := []string{user.Email}
 		err := c.mailer.SendVerifyEmail(to, user.ID.String())
 		if err != nil {
-			misc.ReportError("Cant sent verify email")
+			misc.ReportError("Cant sent verify email!")
 		}
 	}()
 }
 
 func (c *UserController) Delete(ctx *gin.Context) {
 	payload, err := misc.ExtractJwtPayload(ctx)
-	if err {
-		misc.FailedClaimsExtractResponse(ctx)
+	if misc.HandleError(ctx, err, http.StatusBadRequest) {
 		return
 	}
 
-	if c.repo.Delete(payload) != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Something went wrong",
-		})
+	if misc.HandleError(ctx, c.repo.Delete(payload), http.StatusInternalServerError, "Cant delete user, try later.") {
 		return
 	}
 
@@ -69,8 +61,7 @@ func (c *UserController) Delete(ctx *gin.Context) {
 
 func (c *UserController) Get(ctx *gin.Context) {
 	payload, err := misc.ExtractJwtPayload(ctx)
-	if err {
-		misc.FailedClaimsExtractResponse(ctx)
+	if misc.HandleError(ctx, err, http.StatusBadRequest) {
 		return
 	}
 
@@ -81,16 +72,12 @@ func (c *UserController) Get(ctx *gin.Context) {
 
 func (c *UserController) Update(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
-	if extractErr {
-		misc.FailedClaimsExtractResponse(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
 	}
 
 	user, err := c.repo.GetByEmail(payload.Email)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Cant extract user from database",
-		})
+	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant extract user from database") {
 		return
 	}
 
@@ -98,10 +85,7 @@ func (c *UserController) Update(ctx *gin.Context) {
 	_ = ctx.BindJSON(&updateDto)
 
 	result, err := c.repo.Update(user.ID, updateDto)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Cant update user info!",
-		})
+	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant update user info, try later.") {
 		return
 	}
 
@@ -112,17 +96,9 @@ func (c *UserController) Update(ctx *gin.Context) {
 
 func (c *UserController) Verify(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"error": "Look like you attacking me",
-		})
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me") {
 		return
-	}
-
-	if err := c.repo.Verify(id); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Something went wrong. Try later",
-		})
+	} else if misc.HandleError(ctx, c.repo.Verify(id), http.StatusForbidden, "Something went wrong. Try later.") {
 		return
 	}
 

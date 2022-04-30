@@ -11,10 +11,10 @@ type BaseUserInfo struct {
 }
 
 type CreateUser struct {
-	FirstName  string `json:"first_name"`
-	SecondName string `json:"second_name"`
-	Email      string `json:"email"`
-	Password   string `json:"password"`
+	FirstName  string `json:"first_name" binding:"required"`
+	SecondName string `json:"second_name" binding:"required"`
+	Email      string `json:"email" binding:"required"`
+	Password   string `json:"password" binding:"required"`
 }
 
 type UpdateUser struct {

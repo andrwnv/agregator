@@ -65,15 +65,13 @@ func (c *FileController) GetImage(ctx *gin.Context) {
 }
 
 func (c *FileController) UploadAvatar(ctx *gin.Context) {
-	payload, parseErr := misc.ExtractJwtPayload(ctx)
-	if parseErr {
-		misc.FailedClaimsExtractResponse(ctx)
+	payload, err := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, err, http.StatusBadRequest) {
 		return
 	}
 
 	file, err := ctx.FormFile("file")
-	if err != nil {
-		misc.IncorrectRequestBodyResponse(ctx)
+	if misc.HandleError(ctx, err, http.StatusBadRequest) {
 		return
 	}
 
@@ -81,23 +79,18 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 	newFileName := fmt.Sprintf("%s%s", uuid.New(), ext)
 
 	pathForSave := path.Join(c.DownloadPath, payload.ID)
-	if os.MkdirAll(pathForSave, os.ModePerm) != nil {
-		handleSaveError(ctx)
+	if misc.HandleError(ctx, os.MkdirAll(pathForSave, os.ModePerm), http.StatusServiceUnavailable) {
 		return
 	}
 
 	if _, ok := c.httpContentType[ext]; ok {
-		if err := ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)); err != nil {
-			handleSaveError(ctx)
+		if misc.HandleError(ctx, ctx.SaveUploadedFile(file, path.Join(pathForSave, newFileName)), http.StatusServiceUnavailable) {
 			return
 		}
 	}
 
 	user, err := c.userRepo.GetByEmail(payload.Email)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Cant extract user from database",
-		})
+	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant extract user from database.") {
 		return
 	}
 
@@ -105,10 +98,7 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 	updateDto.PhotoUrl = newFileName
 	result, err := c.userRepo.Update(uuid.MustParse(payload.ID), updateDto)
 
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Cant update user info!",
-		})
+	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant update user info.") {
 		return
 	}
 
@@ -119,15 +109,13 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 
 func (c *FileController) UploadImagesMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		payload, parseErr := misc.ExtractJwtPayload(ctx)
-		if parseErr {
-			misc.FailedClaimsExtractResponse(ctx)
+		payload, err := misc.ExtractJwtPayload(ctx)
+		if misc.HandleError(ctx, err, http.StatusBadRequest) {
 			return
 		}
 
 		form, err := ctx.MultipartForm()
-		if err != nil {
-			misc.IncorrectRequestBodyResponse(ctx)
+		if misc.HandleError(ctx, err, http.StatusBadRequest) {
 			return
 		}
 

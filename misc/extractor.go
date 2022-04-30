@@ -6,15 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ExtractJwtPayload(ctx *gin.Context) (user dto.BaseUserInfo, err bool) {
+func ExtractJwtPayload(ctx *gin.Context) (user dto.BaseUserInfo, err error) {
 	claims, ok := ctx.Get("token-claims")
 	if !ok {
-		return user, true
+		return user, &JwtError{}
 	}
 
 	j, _ := json.Marshal(claims.(map[string]interface{}))
 	user = dto.BaseUserInfo{}
 	_ = json.Unmarshal(j, &user)
 
-	return user, false
+	return user, nil
 }
