@@ -77,6 +77,7 @@ func (c *EventController) Get(ctx *gin.Context) {
 	event, err := c.eventRepo.Get(id)
 	if err != nil {
 		ctx.Status(http.StatusNotFound)
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
