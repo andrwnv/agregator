@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -9,9 +10,9 @@ import (
 type Region struct {
 	gorm.Model
 
-	ID         uuid.UUID `gorm:"primaryKey"`
-	RegionName string    `gorm:"not null"`
-	RegionID   string    `gorm:"not null"`
+	ID              uuid.UUID `gorm:"primaryKey"`
+	RegionName      string    `gorm:"not null"`
+	RegionShortName string    `gorm:"not null"`
 }
 
 // ----- RegionRepo methods -----
@@ -39,7 +40,7 @@ func NewRegionRepo(repo *PgRepo) *RegionRepo {
 }
 
 func (r *RegionRepo) GetByRegionID(regionID string) (region Region, err error) {
-	err = r.repo.Database.Where(&Region{RegionID: regionID}).First(&region).Error
+	err = r.repo.Database.Where(&Region{RegionShortName: regionID}).First(&region).Error
 	return region, err
 }
 
@@ -50,12 +51,12 @@ func (r *RegionRepo) GetByRegionName(regionName string) (region Region, err erro
 
 func (r *RegionRepo) initBaseRegions() {
 	for key, value := range r.regions {
-		err := r.repo.Database.Where(&Region{RegionID: key, RegionName: value}).First(&Region{}).Error
+		err := r.repo.Database.Where(&Region{RegionShortName: key, RegionName: value}).First(&Region{}).Error
 		if err != nil {
 			createErr := r.repo.Database.Create(&Region{
-				ID:         uuid.New(),
-				RegionName: value,
-				RegionID:   key,
+				ID:              uuid.New(),
+				RegionName:      value,
+				RegionShortName: key,
 			}).Error
 
 			if createErr != nil {
@@ -63,5 +64,14 @@ func (r *RegionRepo) initBaseRegions() {
 				return
 			}
 		}
+	}
+}
+
+// ----- Conversations -----
+
+func RegionToRegion(region Region) dto.RegionDto {
+	return dto.RegionDto{
+		RegionID:   region.RegionShortName,
+		RegionName: region.RegionName,
 	}
 }
