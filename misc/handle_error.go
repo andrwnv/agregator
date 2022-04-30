@@ -5,7 +5,8 @@ import (
 )
 
 func HandleError(ctx *gin.Context, err error, status int, text ...string) bool {
-	if err != nil {
+	haveError := err != nil
+	if haveError {
 		if len(text) == 0 {
 			ctx.JSON(status, gin.H{
 				"error": err.Error(),
@@ -16,5 +17,5 @@ func HandleError(ctx *gin.Context, err error, status int, text ...string) bool {
 			})
 		}
 	}
-	return err == nil
+	return haveError
 }
