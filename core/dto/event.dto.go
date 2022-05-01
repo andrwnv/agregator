@@ -25,3 +25,14 @@ type CreateEvent struct {
 	Latitude        float32 `json:"latitude" binding:"required"`
 	RegionID        string  `json:"region_id" binding:"required"`
 }
+
+type UpdateEvent struct {
+	BeginDate       int64   `json:"begin_date"`
+	EndDate         int64   `json:"end_date"`
+	PaymentRequired bool    `json:"payment_required"`
+	Title           string  `json:"title"`
+	Description     string  `json:"description"`
+	Longitude       float32 `json:"longitude"`
+	Latitude        float32 `json:"latitude"`
+	RegionID        string  `json:"region_id"`
+}

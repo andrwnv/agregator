@@ -54,6 +54,7 @@ type EventRepoCrud interface {
 	Create(dto dto.CreateEvent, u User, region Region) (Event, error)
 	Get(id uuid.UUID) (Event, error)
 	Delete(id uuid.UUID) error
+	Update(id uuid.UUID, dto dto.UpdateEvent, region Region) error
 }
 
 type EventRepo struct {
@@ -73,7 +74,7 @@ func (repo *EventRepo) Create(dto dto.CreateEvent, user User, region Region) (Ev
 		ID:              uuid.New(),
 		BeginDate:       time.Unix(dto.BeginDate, 0),
 		EndDate:         time.Unix(dto.EndDate, 0),
-		PaymentRequired: false,
+		PaymentRequired: dto.PaymentRequired,
 		CreatedByID:     user.ID,
 		Title:           dto.Title,
 		Description:     dto.Description,
@@ -96,6 +97,25 @@ func (repo *EventRepo) Delete(id uuid.UUID) error {
 	return repo.repo.Database.Exec("DELETE FROM events WHERE id = ?", id).Error
 }
 
+func (repo *EventRepo) Update(id uuid.UUID, dto dto.UpdateEvent, region Region) error {
+	event, err := repo.Get(id)
+	if err != nil {
+		return err
+	}
+
+	event.BeginDate = time.Unix(dto.BeginDate, 0)
+	event.EndDate = time.Unix(dto.EndDate, 0)
+	event.PaymentRequired = dto.PaymentRequired
+	event.Title = dto.Title
+	event.Description = dto.Description
+	event.Longitude = dto.Longitude
+	event.Latitude = dto.Latitude
+	event.RegionID = region.ID
+	event.Region = region
+
+	return repo.repo.Database.Save(&event).Error
+}
+
 // ----- Conversations -----
 
 func EventToEvent(event Event) dto.EventDto {
@@ -110,5 +130,18 @@ func EventToEvent(event Event) dto.EventDto {
 		Latitude:        event.Latitude,
 		CreatedBy:       UserToBaseUser(event.CreatedBy),
 		RegionInfo:      RegionToRegion(event.Region),
+	}
+}
+
+func EventToUpdateEvent(event Event) dto.UpdateEvent {
+	return dto.UpdateEvent{
+		BeginDate:       event.BeginDate.Unix(),
+		EndDate:         event.EndDate.Unix(),
+		PaymentRequired: event.PaymentRequired,
+		Title:           event.Title,
+		Description:     event.Description,
+		Longitude:       event.Longitude,
+		Latitude:        event.Latitude,
+		RegionID:        event.Region.RegionShortName,
 	}
 }

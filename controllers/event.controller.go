@@ -26,6 +26,8 @@ func NewEventController(eventRepo *repo.EventRepo,
 	}
 }
 
+// TODO: check begin, end datetime correctness for upd & create
+
 func (c *EventController) Create(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
 	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
@@ -74,6 +76,36 @@ func (c *EventController) Get(ctx *gin.Context) {
 }
 
 func (c *EventController) Update(ctx *gin.Context) {
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
+		return
+	}
+
+	event, err := c.eventRepo.Get(uuid.MustParse(ctx.Param("event_id")))
+	if misc.HandleError(ctx, err, http.StatusNotFound) {
+		return
+	}
+
+	updateDto := repo.EventToUpdateEvent(event)
+	if misc.HandleError(ctx, ctx.BindJSON(&updateDto), http.StatusBadRequest) {
+		return
+	}
+
+	if payload.ID != event.CreatedBy.ID.String() {
+		ctx.Status(http.StatusForbidden)
+		return
+	}
+
+	event.Region, err = c.regionRepo.GetByRegionID(updateDto.RegionID)
+	if misc.HandleError(ctx, err, http.StatusBadRequest, "Cant find selected country.") {
+		return
+	}
+
+	if misc.HandleError(ctx, c.eventRepo.Update(event.ID, updateDto, event.Region),
+		http.StatusInternalServerError, "Cant update event, try later.") {
+		return
+	}
+
 	ctx.Status(http.StatusNoContent)
 }
 
@@ -89,7 +121,7 @@ func (c *EventController) Delete(ctx *gin.Context) {
 	}
 
 	event, err := c.eventRepo.Get(eventId)
-	if misc.HandleError(ctx, err, http.StatusNoContent) {
+	if misc.HandleError(ctx, err, http.StatusNotFound) {
 		return
 	}
 
