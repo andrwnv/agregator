@@ -85,6 +85,8 @@ func (e *EventEndpoint) Delete(id uuid.UUID, userInfo dto.BaseUserInfo) Result {
 	return Result{err != nil, err}
 }
 
+// ----- EventEndpoint: Images -----
+
 func (e *EventEndpoint) UpdateEventImages(id uuid.UUID, userInfo dto.BaseUserInfo,
 	filesToCreate []string, filesToDelete []string) Result {
 
@@ -115,6 +117,8 @@ func (e *EventEndpoint) UpdateEventImages(id uuid.UUID, userInfo dto.BaseUserInf
 	return Result{true, nil}
 }
 
+// ----- EventEndpoint: Comments -----
+
 func (e *EventEndpoint) CreateComment(createDto dto.CreateEventCommentDto, userInfo dto.BaseUserInfo) Result {
 	user, err := e.userEndpoint.GetFull(userInfo)
 	if err != nil {
@@ -131,4 +135,18 @@ func (e *EventEndpoint) CreateComment(createDto dto.CreateEventCommentDto, userI
 	}
 
 	return Result{repo.CommentToComment(comment), nil}
+}
+
+func (e *EventEndpoint) GetComments(eventId uuid.UUID, page int, count int) Result {
+	comments, err := e.eventRepo.GetComments(eventId, page, count)
+	if err != nil {
+		return Result{nil, MakeEndpointError("Failed to create comment.")}
+	}
+
+	var result []dto.EventCommentDto
+	for _, value := range comments {
+		result = append(result, repo.CommentToComment(value))
+	}
+
+	return Result{result, nil}
 }

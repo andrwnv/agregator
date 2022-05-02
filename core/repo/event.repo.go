@@ -130,9 +130,11 @@ func (repo *EventRepo) Update(id uuid.UUID, dto dto.UpdateEvent, region Region) 
 	return repo.repo.Database.Save(&event).Error
 }
 
+// ----- EventRepo methods: EventPhoto -----
+
 func (repo *EventRepo) GetImages(id uuid.UUID) ([]string, error) {
 	var photos []EventPhoto
-	err := repo.repo.Database.Where("event_id = ?", id).Take(&photos).Error
+	err := repo.repo.Database.Where("event_id = ?", id).Find(&photos).Error
 
 	var result []string
 	for _, photo := range photos {
@@ -158,6 +160,8 @@ func (repo *EventRepo) DeleteImages(url string) error {
 	return repo.repo.Database.Table("event_photos").Unscoped().Delete(&photos).Error
 }
 
+// ----- EventRepo methods: EventComment -----
+
 func (repo *EventRepo) CreateComment(commentDto dto.CreateEventCommentDto, user User, event Event) (EventComment, error) {
 	eventComment := EventComment{
 		ID:          uuid.New(),
@@ -169,6 +173,19 @@ func (repo *EventRepo) CreateComment(commentDto dto.CreateEventCommentDto, user 
 	}
 
 	return eventComment, repo.repo.Database.Create(&eventComment).Error
+}
+
+func (repo *EventRepo) GetComments(eventId uuid.UUID, page int, count int) (comments []EventComment, err error) {
+	switch {
+	case count > 15:
+		count = 15
+	case count <= 0:
+		count = 15
+	}
+	offset := (page - 1) * count
+
+	return comments, repo.repo.Database.Preload("CreatedBy").Preload("LinkedEvent").Offset(offset).Limit(count).
+		Where("event_id = ?", eventId).Find(&comments).Error
 }
 
 // ----- Conversations -----
@@ -208,5 +225,7 @@ func CommentToComment(comment EventComment) dto.EventCommentDto {
 		CreatedBy:     UserToBaseUser(comment.CreatedBy),
 		LinkedEventID: comment.LinkedEvent.ID.String(),
 		CommentBody:   comment.CommentText,
+		UpdatedAt:     comment.UpdatedAt.Unix(),
+		CreatedAt:     comment.CreatedAt.Unix(),
 	}
 }

@@ -6,7 +6,9 @@ import (
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 )
 
 type CommentController struct {
@@ -22,20 +24,36 @@ func NewCommentController(endpoint *endpoints.EventEndpoint) *CommentController 
 func (c *CommentController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 	group := rootGroup.Group("/comments")
 	{
-		group.GET("/event/:event_id/:page/:count", c.get)
-		group.POST("/event/create", middleware.AuthorizeJWTMiddleware(), c.create)
-		group.DELETE("/event/delete/:id", c.delete)
-		group.PATCH("/event/update/:id", c.update)
+		group.GET("/event/:event_id/:page/:count", c.getEventComments)
+		//group.GET("/event/:event_id", c.getEventComments)
+		group.POST("/event/create", middleware.AuthorizeJWTMiddleware(), c.createEventComment)
+		group.DELETE("/event/delete/:id", middleware.AuthorizeJWTMiddleware(), c.deleteEventComment)
+		group.PATCH("/event/update/:id", middleware.AuthorizeJWTMiddleware(), c.updateEventComment)
 	}
 }
 
 // ----- Request context processing -----
 
-func (c *CommentController) get(ctx *gin.Context) {
+func (c *CommentController) getEventComments(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("event_id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
 
+	pageNum, _ := strconv.Atoi(ctx.Param("page"))
+	count, _ := strconv.Atoi(ctx.Param("count"))
+
+	result := c.endpoint.GetComments(id, pageNum, count)
+	if misc.HandleError(ctx, result.Error, http.StatusNoContent) {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result.Value,
+	})
 }
 
-func (c *CommentController) create(ctx *gin.Context) {
+func (c *CommentController) createEventComment(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
 	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
@@ -57,10 +75,10 @@ func (c *CommentController) create(ctx *gin.Context) {
 	})
 }
 
-func (c *CommentController) delete(ctx *gin.Context) {
+func (c *CommentController) deleteEventComment(ctx *gin.Context) {
 
 }
 
-func (c *CommentController) update(ctx *gin.Context) {
+func (c *CommentController) updateEventComment(ctx *gin.Context) {
 
 }
