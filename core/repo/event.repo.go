@@ -156,7 +156,7 @@ func (repo *EventRepo) CreateImages(id uuid.UUID, imgUrl string) error {
 
 func (repo *EventRepo) DeleteImages(url string) error {
 	var photos []EventPhoto
-	repo.repo.Database.Where("url = ?", url).Take(&photos)
+	repo.repo.Database.Where("url = ?", url).Find(&photos)
 	return repo.repo.Database.Table("event_photos").Unscoped().Delete(&photos).Error
 }
 
@@ -186,6 +186,16 @@ func (repo *EventRepo) GetComments(eventId uuid.UUID, page int, count int) (comm
 
 	return comments, repo.repo.Database.Preload("CreatedBy").Preload("LinkedEvent").Offset(offset).Limit(count).
 		Where("event_id = ?", eventId).Find(&comments).Error
+}
+
+func (repo *EventRepo) GetCommentByID(commentId uuid.UUID) (comment EventComment, err error) {
+	return comment, repo.repo.Database.Preload("CreatedBy").Where("id = ?", commentId).Take(&comment).Error
+}
+
+func (repo *EventRepo) DeleteComments(commentId uuid.UUID) error {
+	var comment EventComment
+	repo.repo.Database.Where("id = ?", commentId).Find(&comment)
+	return repo.repo.Database.Table("event_comments").Unscoped().Delete(&comment).Error
 }
 
 // ----- Conversations -----

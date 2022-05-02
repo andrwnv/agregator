@@ -150,3 +150,19 @@ func (e *EventEndpoint) GetComments(eventId uuid.UUID, page int, count int) Resu
 
 	return Result{result, nil}
 }
+
+func (e *EventEndpoint) DeleteComment(commentId uuid.UUID, userInfo dto.BaseUserInfo) Result {
+	comment, err := e.eventRepo.GetCommentByID(commentId)
+	if err != nil {
+		return Result{nil, err}
+	}
+	if userInfo.ID != comment.CreatedBy.ID.String() {
+		return Result{nil, MakeEndpointError("Isn't your comment!")}
+	}
+
+	err = e.eventRepo.DeleteComments(commentId)
+	if err != nil {
+		return Result{false, MakeEndpointError("Cant delete comment(s).")}
+	}
+	return Result{true, nil}
+}

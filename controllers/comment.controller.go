@@ -25,7 +25,6 @@ func (c *CommentController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 	group := rootGroup.Group("/comments")
 	{
 		group.GET("/event/:event_id/:page/:count", c.getEventComments)
-		//group.GET("/event/:event_id", c.getEventComments)
 		group.POST("/event/create", middleware.AuthorizeJWTMiddleware(), c.createEventComment)
 		group.DELETE("/event/delete/:id", middleware.AuthorizeJWTMiddleware(), c.deleteEventComment)
 		group.PATCH("/event/update/:id", middleware.AuthorizeJWTMiddleware(), c.updateEventComment)
@@ -76,7 +75,22 @@ func (c *CommentController) createEventComment(ctx *gin.Context) {
 }
 
 func (c *CommentController) deleteEventComment(ctx *gin.Context) {
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
+		return
+	}
 
+	id, err := uuid.Parse(ctx.Param("id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	result := c.endpoint.DeleteComment(id, payload)
+	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
+		return
+	}
+
+	ctx.Status(http.StatusOK)
 }
 
 func (c *CommentController) updateEventComment(ctx *gin.Context) {
