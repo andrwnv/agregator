@@ -114,3 +114,21 @@ func (e *EventEndpoint) UpdateEventImages(id uuid.UUID, userInfo dto.BaseUserInf
 
 	return Result{true, nil}
 }
+
+func (e *EventEndpoint) CreateComment(createDto dto.CreateEventCommentDto, userInfo dto.BaseUserInfo) Result {
+	user, err := e.userEndpoint.GetFull(userInfo)
+	if err != nil {
+		return Result{nil, err}
+	}
+	event, err := e.eventRepo.Get(uuid.MustParse(createDto.LinkedEventID))
+	if err != nil {
+		return Result{false, err}
+	}
+
+	comment, err := e.eventRepo.CreateComment(createDto, user, event)
+	if err != nil {
+		return Result{nil, MakeEndpointError("Failed to create comment.")}
+	}
+
+	return Result{repo.CommentToComment(comment), nil}
+}

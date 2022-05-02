@@ -45,6 +45,7 @@ func init() {
 		controllers.NewEventController(eventEndpoint, fileCtrl),
 		controllers.NewAuthController(authEndpoint),
 		fileCtrl,
+		controllers.NewCommentController(eventEndpoint),
 	)
 
 	core.SERVER = &core.Server{

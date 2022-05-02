@@ -10,7 +10,8 @@ func MakeRouter(
 	userCtrl *controllers.UserController,
 	eventCtrl *controllers.EventController,
 	authCtrl *controllers.AuthController,
-	fileCtrl *controllers.FileController) *gin.Engine {
+	fileCtrl *controllers.FileController,
+	commentsCtrl *controllers.CommentController) *gin.Engine {
 
 	engine := gin.New()
 	engine.Use(gin.Logger())
@@ -22,6 +23,7 @@ func MakeRouter(
 		eventCtrl.MakeRoutesV1(v1Group)
 		authCtrl.MakeRoutesV1(v1Group)
 		fileCtrl.MakeRoutesV1(v1Group)
+		commentsCtrl.MakeRoutesV1(v1Group)
 	}
 
 	engine.NoRoute(func(c *gin.Context) {

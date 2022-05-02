@@ -158,6 +158,19 @@ func (repo *EventRepo) DeleteImages(url string) error {
 	return repo.repo.Database.Table("event_photos").Unscoped().Delete(&photos).Error
 }
 
+func (repo *EventRepo) CreateComment(commentDto dto.CreateEventCommentDto, user User, event Event) (EventComment, error) {
+	eventComment := EventComment{
+		ID:          uuid.New(),
+		EventID:     event.ID,
+		CreatedByID: user.ID,
+		CommentText: commentDto.CommentBody,
+		LinkedEvent: event,
+		CreatedBy:   user,
+	}
+
+	return eventComment, repo.repo.Database.Create(&eventComment).Error
+}
+
 // ----- Conversations -----
 
 func EventToEvent(event Event, photoUrls []string) dto.EventDto {
@@ -186,5 +199,14 @@ func EventToUpdateEvent(event Event) dto.UpdateEvent {
 		Longitude:       event.Longitude,
 		Latitude:        event.Latitude,
 		RegionID:        event.Region.RegionShortName,
+	}
+}
+
+func CommentToComment(comment EventComment) dto.EventCommentDto {
+	return dto.EventCommentDto{
+		ID:            comment.ID.String(),
+		CreatedBy:     UserToBaseUser(comment.CreatedBy),
+		LinkedEventID: comment.LinkedEvent.ID.String(),
+		CommentBody:   comment.CommentText,
 	}
 }
