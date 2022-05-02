@@ -1,51 +1,41 @@
 package controllers
 
 import (
-	"github.com/andrwnv/event-aggregator/core"
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/repo"
-	"github.com/andrwnv/event-aggregator/core/services"
+	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AuthController struct {
-	repo *repo.UserRepo
+	endpoint *endpoints.AuthEndpoint
 }
 
-func NewAuthController(r *repo.UserRepo) *AuthController {
-	return &AuthController{repo: r}
+func NewAuthController(endpoint *endpoints.AuthEndpoint) *AuthController {
+	return &AuthController{endpoint: endpoint}
+}
+
+func (c *AuthController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
+	group := rootGroup.Group("/auth")
+	{
+		group.POST("/login", c.Login)
+	}
 }
 
 func (c *AuthController) Login(ctx *gin.Context) {
 	var credential dto.LoginCredentials
 	err := ctx.ShouldBind(&credential)
-	if misc.HandleError(ctx, err, http.StatusBadRequest, "Incorrect request body") {
+	if misc.HandleError(ctx, err, http.StatusUnauthorized, "Incorrect request body") {
 		return
 	}
 
-	user, err := c.repo.GetByEmail(credential.Email)
-	if misc.HandleError(ctx, err, http.StatusUnauthorized) {
+	result := c.endpoint.Login(credential)
+	if misc.HandleError(ctx, result.Error, http.StatusUnauthorized) {
 		return
 	}
 
-	authSuccess := services.Login(credential, services.LoginInfo{
-		Email:    user.Email,
-		Password: user.Password,
-	})
-
-	if authSuccess {
-		token := core.SERVER.JwtService.GenerateToken(credential.Email, repo.UserToBaseUser(user))
-		if token != "" {
-			ctx.JSON(http.StatusOK, gin.H{
-				"token": token,
-			})
-			return
-		}
-	}
-
-	ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-		"error": "Invalid auth info",
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+		"result": result.Value,
 	})
 }

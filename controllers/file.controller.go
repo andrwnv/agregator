@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,7 +17,7 @@ import (
 
 type FileController struct {
 	DownloadPath    string
-	userRepo        *repo.UserRepo
+	userEndpoint    *endpoints.UserEndpoint
 	httpContentType map[string]string
 }
 
@@ -25,15 +27,23 @@ func handleSaveError(ctx *gin.Context) {
 	})
 }
 
-func NewFileController(rootPath string, userRepo *repo.UserRepo) *FileController {
+func NewFileController(rootPath string, userRepo *endpoints.UserEndpoint) *FileController {
 	return &FileController{
 		DownloadPath: rootPath,
-		userRepo:     userRepo,
+		userEndpoint: userRepo,
 		httpContentType: map[string]string{
 			".jpg": "image/jpeg",
 			".png": "image/png",
 			".gif": "image/gif",
 		},
+	}
+}
+
+func (c *FileController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
+	group := rootGroup.Group("/file")
+	{
+		group.PATCH("/update_avatar", middleware.AuthorizeJWTMiddleware(), c.UploadAvatar)
+		group.GET("/img/:filename", c.GetImage)
 	}
 }
 
@@ -89,21 +99,21 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 		}
 	}
 
-	user, err := c.userRepo.GetByEmail(payload.Email)
+	user, err := c.userEndpoint.GetFull(payload)
 	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant extract user from database.") {
 		return
 	}
 
 	updateDto := repo.UserToUpdateUserDto(user)
 	updateDto.PhotoUrl = newFileName
-	result, err := c.userRepo.Update(uuid.MustParse(payload.ID), updateDto)
+	result := c.userEndpoint.Update(uuid.MustParse(payload.ID), updateDto)
 
-	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant update user info.") {
+	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError, "Cant update user info.") {
 		return
 	}
 
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"result": result,
+		"result": result.Value,
 	})
 }
 

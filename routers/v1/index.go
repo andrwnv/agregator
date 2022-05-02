@@ -6,38 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Router struct {
-	userRouter  *UserRouter
-	fileRouter  *FileRouter
-	authRouter  *AuthRouter
-	eventRouter *EventRouter
-}
-
 func MakeRouter(
 	userCtrl *controllers.UserController,
+	eventCtrl *controllers.EventController,
 	authCtrl *controllers.AuthController,
-	fileCtrl *controllers.FileController,
-	eventCtrl *controllers.EventController) *Router {
+	fileCtrl *controllers.FileController) *gin.Engine {
 
-	return &Router{
-		userRouter:  MakeUserRouter(userCtrl),
-		fileRouter:  MakeFileRouter(fileCtrl),
-		authRouter:  MakeAuthRouter(authCtrl),
-		eventRouter: MakeEventRouter(eventCtrl),
-	}
-}
-
-func (router *Router) InitRouter() *gin.Engine {
 	engine := gin.New()
 	engine.Use(gin.Logger())
 
 	v1Group := engine.Group("/api/v1")
 	v1Group.Use(middleware.CORSMiddleware())
 	{
-		router.userRouter.Make(v1Group)
-		router.authRouter.Make(v1Group)
-		router.fileRouter.Make(v1Group)
-		router.eventRouter.Make(v1Group)
+		userCtrl.MakeRoutesV1(v1Group)
+		eventCtrl.MakeRoutesV1(v1Group)
+		authCtrl.MakeRoutesV1(v1Group)
+		fileCtrl.MakeRoutesV1(v1Group)
 	}
 
 	engine.NoRoute(func(c *gin.Context) {

@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
+	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
-	"github.com/andrwnv/event-aggregator/core/services"
+	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,55 +12,30 @@ import (
 )
 
 type UserController struct {
-	repo   *repo.UserRepo
-	mailer *services.Mailer
+	endpoint *endpoints.UserEndpoint
 }
 
-func NewUserController(r *repo.UserRepo, mailer *services.Mailer) *UserController {
+func NewUserController(endpoint *endpoints.UserEndpoint) *UserController {
 	return &UserController{
-		repo:   r,
-		mailer: mailer,
+		endpoint: endpoint,
 	}
 }
 
-func (c *UserController) Create(ctx *gin.Context) {
-	var _dto dto.CreateUser
-	if misc.HandleError(ctx, ctx.BindJSON(&_dto), http.StatusBadRequest, "Incorrect request body.") {
-		return
+func (c *UserController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
+	group := rootGroup.Group("/user")
+	{
+		group.POST("/create", c.create)
+		group.GET("/me", middleware.AuthorizeJWTMiddleware(), c.get)
+		group.DELETE("/delete", middleware.AuthorizeJWTMiddleware(), c.delete)
+		group.GET("/:id", c.getByID)
+		group.PATCH("/update", middleware.AuthorizeJWTMiddleware(), c.update)
+		group.GET("/verify/:id", c.verify)
 	}
-
-	user, err := c.repo.Create(_dto)
-	if misc.HandleError(ctx, err, http.StatusConflict, "User already exists!") {
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, gin.H{
-		"result": "Successful create, Welcome!",
-	})
-
-	go func() {
-		to := []string{user.Email}
-		err := c.mailer.SendVerifyEmail(to, user.ID.String())
-		if err != nil {
-			misc.ReportError("Cant sent verify email!")
-		}
-	}()
 }
 
-func (c *UserController) Delete(ctx *gin.Context) {
-	payload, err := misc.ExtractJwtPayload(ctx)
-	if misc.HandleError(ctx, err, http.StatusBadRequest) {
-		return
-	}
+// ----- Request context processing -----
 
-	if misc.HandleError(ctx, c.repo.Delete(payload), http.StatusInternalServerError, "Cant delete user, try later.") {
-		return
-	}
-
-	ctx.Status(http.StatusOK)
-}
-
-func (c *UserController) Get(ctx *gin.Context) {
+func (c *UserController) get(ctx *gin.Context) {
 	payload, err := misc.ExtractJwtPayload(ctx)
 	if misc.HandleError(ctx, err, http.StatusBadRequest) {
 		return
@@ -70,13 +46,57 @@ func (c *UserController) Get(ctx *gin.Context) {
 	})
 }
 
-func (c *UserController) Update(ctx *gin.Context) {
+func (c *UserController) create(ctx *gin.Context) {
+	var createDto dto.CreateUser
+	if misc.HandleError(ctx, ctx.BindJSON(&createDto), http.StatusBadRequest, "Incorrect request body.") {
+		return
+	}
+
+	res := c.endpoint.Create(createDto)
+	if misc.HandleError(ctx, res.Error, http.StatusConflict) {
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"result": res.Value,
+	})
+}
+
+func (c *UserController) delete(ctx *gin.Context) {
+	payload, err := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, err, http.StatusBadRequest) {
+		return
+	}
+
+	if misc.HandleError(ctx, c.endpoint.Delete(payload).Error, http.StatusInternalServerError) {
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
+func (c *UserController) getByID(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if misc.HandleError(ctx, err, http.StatusBadRequest) {
+		return
+	}
+
+	result := c.endpoint.GetByID(id)
+	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result.Value,
+	})
+}
+
+func (c *UserController) update(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
 	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
 	}
 
-	user, err := c.repo.GetByEmail(payload.Email)
+	user, err := c.endpoint.GetFull(payload)
 	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant extract user from database") {
 		return
 	}
@@ -84,25 +104,28 @@ func (c *UserController) Update(ctx *gin.Context) {
 	updateDto := repo.UserToUpdateUserDto(user)
 	_ = ctx.BindJSON(&updateDto)
 
-	result, err := c.repo.Update(user.ID, updateDto)
-	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant update user info, try later.") {
+	result := c.endpoint.Update(user.ID, updateDto)
+	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}
 
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"result": result,
+		"result": result.Value,
 	})
 }
 
-func (c *UserController) Verify(ctx *gin.Context) {
+func (c *UserController) verify(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me") {
 		return
-	} else if misc.HandleError(ctx, c.repo.Verify(id), http.StatusForbidden, "Something went wrong. Try later.") {
+	}
+
+	result := c.endpoint.Verify(id)
+	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"result": "User verified",
+		"result": result.Value,
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/andrwnv/event-aggregator/controllers"
 	"github.com/andrwnv/event-aggregator/core"
+	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
 	"github.com/andrwnv/event-aggregator/core/services"
 	"github.com/andrwnv/event-aggregator/misc"
@@ -33,14 +34,19 @@ func init() {
 		os.Getenv("SMTP_PASSWORD"),
 		os.Getenv("SMTP_USER"))
 
+	userEndpoint := endpoints.NewUserEndpoint(userRepo, mailer)
+	eventEndpoint := endpoints.NewEventEndpoint(eventRepo, userEndpoint, regionRepo)
+	authEndpoint := endpoints.NewAuthEndpoint(userEndpoint)
+
 	router := v1.MakeRouter(
-		controllers.NewUserController(userRepo, mailer),
-		controllers.NewAuthController(userRepo),
-		controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userRepo),
-		controllers.NewEventController(eventRepo, userRepo, regionRepo))
+		controllers.NewUserController(userEndpoint),
+		controllers.NewEventController(eventEndpoint),
+		controllers.NewAuthController(authEndpoint),
+		controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userEndpoint),
+	)
 
 	core.SERVER = &core.Server{
-		Router:     router.InitRouter(),
+		Router:     router,
 		JwtService: services.JWTAuthService(),
 	}
 }

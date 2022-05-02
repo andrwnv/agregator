@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
+	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,25 +12,42 @@ import (
 )
 
 type EventController struct {
-	eventRepo  *repo.EventRepo
-	userRepo   *repo.UserRepo
-	regionRepo *repo.RegionRepo
+	endpoint *endpoints.EventEndpoint
 }
 
-func NewEventController(eventRepo *repo.EventRepo,
-	userRepo *repo.UserRepo,
-	regionRepo *repo.RegionRepo) *EventController {
-
+func NewEventController(endpoint *endpoints.EventEndpoint) *EventController {
 	return &EventController{
-		eventRepo:  eventRepo,
-		userRepo:   userRepo,
-		regionRepo: regionRepo,
+		endpoint: endpoint,
 	}
 }
 
-// TODO: check begin, end datetime correctness for upd & create
+func (c *EventController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
+	group := rootGroup.Group("/event")
+	{
+		group.GET("/:id", c.get)
+		group.POST("/create", middleware.AuthorizeJWTMiddleware(), c.create)
+		group.PATCH("/update/:event_id", middleware.AuthorizeJWTMiddleware(), c.update)
+		group.DELETE("/delete/:event_id", middleware.AuthorizeJWTMiddleware(), c.delete)
+	}
+}
 
-func (c *EventController) Create(ctx *gin.Context) {
+func (c *EventController) get(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	result := c.endpoint.Get(id)
+	if misc.HandleError(ctx, result.Error, http.StatusNotFound) {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result.Value,
+	})
+}
+
+func (c *EventController) create(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
 	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
@@ -39,49 +58,23 @@ func (c *EventController) Create(ctx *gin.Context) {
 		return
 	}
 
-	user, err := c.userRepo.GetByEmail(payload.Email)
-	if misc.HandleError(ctx, err, http.StatusInternalServerError) {
-		return
-	}
-
-	region, err := c.regionRepo.GetByRegionID(createDto.RegionID)
-	if misc.HandleError(ctx, err, http.StatusBadRequest, "Cant find selected country.") {
-		return
-	}
-
-	event, err := c.eventRepo.Create(createDto, user, region)
-	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant create event, try later.") {
+	result := c.endpoint.Create(createDto, payload)
+	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"result": repo.EventToEvent(event),
+		"result": result.Value,
 	})
 }
 
-func (c *EventController) Get(ctx *gin.Context) {
-	id, err := uuid.Parse(ctx.Param("id"))
-	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
-		return
-	}
-
-	event, err := c.eventRepo.Get(id)
-	if misc.HandleError(ctx, err, http.StatusNotFound, "Event not found") {
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"result": repo.EventToEvent(event),
-	})
-}
-
-func (c *EventController) Update(ctx *gin.Context) {
+func (c *EventController) update(ctx *gin.Context) {
 	payload, extractErr := misc.ExtractJwtPayload(ctx)
 	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
 		return
 	}
 
-	event, err := c.eventRepo.Get(uuid.MustParse(ctx.Param("event_id")))
+	event, err := c.endpoint.GetFull(uuid.MustParse(ctx.Param("event_id")))
 	if misc.HandleError(ctx, err, http.StatusNotFound) {
 		return
 	}
@@ -91,25 +84,14 @@ func (c *EventController) Update(ctx *gin.Context) {
 		return
 	}
 
-	if payload.ID != event.CreatedBy.ID.String() {
-		ctx.Status(http.StatusForbidden)
-		return
-	}
-
-	event.Region, err = c.regionRepo.GetByRegionID(updateDto.RegionID)
-	if misc.HandleError(ctx, err, http.StatusBadRequest, "Cant find selected country.") {
-		return
-	}
-
-	if misc.HandleError(ctx, c.eventRepo.Update(event.ID, updateDto, event.Region),
-		http.StatusInternalServerError, "Cant update event, try later.") {
+	if misc.HandleError(ctx, c.endpoint.Update(event.ID, updateDto, payload).Error, http.StatusForbidden) {
 		return
 	}
 
 	ctx.Status(http.StatusNoContent)
 }
 
-func (c *EventController) Delete(ctx *gin.Context) {
+func (c *EventController) delete(ctx *gin.Context) {
 	eventId, err := uuid.Parse(ctx.Param("event_id"))
 	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
 		return
@@ -120,19 +102,8 @@ func (c *EventController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	event, err := c.eventRepo.Get(eventId)
-	if misc.HandleError(ctx, err, http.StatusNotFound) {
+	if misc.HandleError(ctx, c.endpoint.Delete(eventId, payload).Error, http.StatusInternalServerError) {
 		return
 	}
-
-	if payload.ID != event.CreatedBy.ID.String() {
-		ctx.Status(http.StatusForbidden)
-		return
-	}
-
-	if misc.HandleError(ctx, c.eventRepo.Delete(eventId), http.StatusInternalServerError, "Cant delete event, try later.") {
-		return
-	}
-
 	ctx.Status(http.StatusOK)
 }

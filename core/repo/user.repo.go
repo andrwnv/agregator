@@ -21,6 +21,11 @@ type User struct {
 	PhotoUrl  string    `gorm:"null"`
 }
 
+func (u *User) BeforeDelete(tx *gorm.DB) error {
+	var events []Event
+	return tx.Table("events").Where("created_by_id = ?", u.ID).Find(&events).Unscoped().Delete(&events).Error
+}
+
 // ----- UserRepo methods -----
 
 type UserRepoCrud interface {
@@ -60,7 +65,7 @@ func (repo *UserRepo) Create(dto dto.CreateUser) (user User, err error) {
 }
 
 func (repo *UserRepo) Delete(dto dto.BaseUserInfo) error {
-	return repo.repo.Database.Exec("DELETE FROM users WHERE id = ?", dto.ID).Error
+	return repo.repo.Database.Unscoped().Delete(&User{ID: uuid.MustParse(dto.ID)}).Error
 }
 
 func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
@@ -69,8 +74,9 @@ func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
 }
 
 func (repo *UserRepo) Get(uuid uuid.UUID) (u dto.BaseUserInfo, err error) {
-	err = repo.repo.Database.Where("id = ?", uuid).First(&u).Error
-	return u, err
+	var user User
+	err = repo.repo.Database.Where("id = ?", uuid).First(&user).Error
+	return UserToBaseUser(user), err
 }
 
 func (repo *UserRepo) Update(uuid uuid.UUID, dto dto.UpdateUser) (dto.BaseUserInfo, error) {
