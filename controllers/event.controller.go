@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
@@ -12,12 +13,14 @@ import (
 )
 
 type EventController struct {
-	endpoint *endpoints.EventEndpoint
+	endpoint       *endpoints.EventEndpoint
+	fileController *FileController
 }
 
-func NewEventController(endpoint *endpoints.EventEndpoint) *EventController {
+func NewEventController(endpoint *endpoints.EventEndpoint, fileCtrl *FileController) *EventController {
 	return &EventController{
-		endpoint: endpoint,
+		endpoint:       endpoint,
+		fileController: fileCtrl,
 	}
 }
 
@@ -28,6 +31,9 @@ func (c *EventController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 		group.POST("/create", middleware.AuthorizeJWTMiddleware(), c.create)
 		group.PATCH("/update/:event_id", middleware.AuthorizeJWTMiddleware(), c.update)
 		group.DELETE("/delete/:event_id", middleware.AuthorizeJWTMiddleware(), c.delete)
+
+		group.PATCH("/add_photos/:event_id", middleware.AuthorizeJWTMiddleware(), c.fileController.UploadImagesMiddleware(), c.createEventImages)
+		group.PATCH("/delete_photos/:event_id", middleware.AuthorizeJWTMiddleware(), c.deleteEventImages)
 	}
 }
 
@@ -106,4 +112,58 @@ func (c *EventController) delete(ctx *gin.Context) {
 		return
 	}
 	ctx.Status(http.StatusOK)
+}
+
+func (c *EventController) createEventImages(ctx *gin.Context) {
+	eventId, err := uuid.Parse(ctx.Param("event_id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
+		return
+	}
+
+	loadedFiles := ctx.GetStringSlice("file-names")
+	if len(loadedFiles) == 0 {
+		if misc.HandleError(ctx, errors.New("no images loaded"), http.StatusBadRequest) {
+			return
+		}
+	}
+
+	result := c.endpoint.UpdateEventImages(eventId, payload, loadedFiles, []string{})
+	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+func (c *EventController) deleteEventImages(ctx *gin.Context) {
+	type FilesUrl struct {
+		Urls []string `json:"urls"`
+	}
+
+	eventId, err := uuid.Parse(ctx.Param("event_id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
+		return
+	}
+
+	var files FilesUrl
+	if misc.HandleError(ctx, ctx.BindJSON(&files), http.StatusBadRequest, "No file to delete.") {
+		return
+	}
+
+	result := c.endpoint.UpdateEventImages(eventId, payload, []string{}, files.Urls)
+	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }

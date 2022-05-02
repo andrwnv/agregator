@@ -43,9 +43,23 @@ type EventPhoto struct {
 	ID      uuid.UUID `gorm:"primaryKey"`
 	EventID uuid.UUID `gorm:"not null"`
 	Url     string    `gorm:"not null"`
-	Size    int       `gorm:"not null"`
 
 	Event Event `gorm:"foreignKey:EventID;references:ID"`
+}
+
+func (ev *Event) BeforeDelete(tx *gorm.DB) error {
+	var eventPhotos []EventPhoto
+	// TODO: delete photos from dir.
+	if err := tx.Table("event_photos").Where("event_id = ?", ev.ID).Find(&eventPhotos).Unscoped().Delete(&eventPhotos).Error; err != nil {
+		return err
+	}
+
+	var eventComments []EventComment
+	if err := tx.Table("event_comments").Where("event_id = ?", ev.ID).Find(&eventComments).Unscoped().Delete(&eventComments).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ----- EventRepo methods -----
@@ -114,6 +128,22 @@ func (repo *EventRepo) Update(id uuid.UUID, dto dto.UpdateEvent, region Region) 
 	event.Region = region
 
 	return repo.repo.Database.Save(&event).Error
+}
+
+func (repo *EventRepo) CreateImages(id uuid.UUID, imgUrl string) error {
+	eventPhoto := EventPhoto{
+		ID:      uuid.New(),
+		EventID: id,
+		Url:     imgUrl,
+	}
+
+	return repo.repo.Database.Create(&eventPhoto).Error
+}
+
+func (repo *EventRepo) DeleteImages(url string) error {
+	var photos []EventPhoto
+	repo.repo.Database.Where("url = ?", url).Take(&photos)
+	return repo.repo.Database.Table("event_photos").Unscoped().Delete(&photos).Error
 }
 
 // ----- Conversations -----

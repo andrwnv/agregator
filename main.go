@@ -38,11 +38,13 @@ func init() {
 	eventEndpoint := endpoints.NewEventEndpoint(eventRepo, userEndpoint, regionRepo)
 	authEndpoint := endpoints.NewAuthEndpoint(userEndpoint)
 
+	fileCtrl := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userEndpoint)
+
 	router := v1.MakeRouter(
 		controllers.NewUserController(userEndpoint),
-		controllers.NewEventController(eventEndpoint),
+		controllers.NewEventController(eventEndpoint, fileCtrl),
 		controllers.NewAuthController(authEndpoint),
-		controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userEndpoint),
+		fileCtrl,
 	)
 
 	core.SERVER = &core.Server{

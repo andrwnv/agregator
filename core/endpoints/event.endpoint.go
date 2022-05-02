@@ -83,3 +83,33 @@ func (e *EventEndpoint) Delete(id uuid.UUID, userInfo dto.BaseUserInfo) Result {
 	err = e.eventRepo.Delete(id)
 	return Result{err != nil, err}
 }
+
+func (e *EventEndpoint) UpdateEventImages(id uuid.UUID, userInfo dto.BaseUserInfo,
+	filesToCreate []string, filesToDelete []string) Result {
+
+	event, err := e.eventRepo.Get(id)
+	if err != nil {
+		return Result{false, err}
+	}
+
+	if userInfo.ID != event.CreatedBy.ID.String() {
+		return Result{false, MakeEndpointError("Isn't your event!")}
+	}
+
+	for _, url := range filesToCreate {
+		err := e.eventRepo.CreateImages(event.ID, url)
+		if err != nil {
+			return Result{false, err}
+		}
+	}
+
+	for _, url := range filesToDelete {
+		err := e.eventRepo.DeleteImages(url)
+		// TODO: delete photos from dir.
+		if err != nil {
+			return Result{false, err}
+		}
+	}
+
+	return Result{true, nil}
+}
