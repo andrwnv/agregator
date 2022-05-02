@@ -15,5 +15,5 @@ type CreateEventCommentDto struct {
 }
 
 type UpdateEventCommentDto struct {
-	CommentBody string `json:"comment_body"`
+	CommentBody string `json:"comment_body" binding:"required"`
 }

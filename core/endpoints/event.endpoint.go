@@ -29,8 +29,12 @@ func (e *EventEndpoint) Get(id uuid.UUID) Result {
 	return Result{repo.EventToEvent(event, eventPhotos), err}
 }
 
-func (e *EventEndpoint) GetFull(id uuid.UUID) (repo.Event, error) {
+func (e *EventEndpoint) GetFullEvent(id uuid.UUID) (repo.Event, error) {
 	return e.eventRepo.Get(id)
+}
+
+func (e *EventEndpoint) GetFullEventComment(id uuid.UUID) (repo.EventComment, error) {
+	return e.eventRepo.GetCommentByID(id)
 }
 
 func (e *EventEndpoint) Create(createDto dto.CreateEvent, userInfo dto.BaseUserInfo) Result {
@@ -163,6 +167,22 @@ func (e *EventEndpoint) DeleteComment(commentId uuid.UUID, userInfo dto.BaseUser
 	err = e.eventRepo.DeleteComments(commentId)
 	if err != nil {
 		return Result{false, MakeEndpointError("Cant delete comment(s).")}
+	}
+	return Result{true, nil}
+}
+
+func (e *EventEndpoint) UpdateComment(id uuid.UUID, updateDto dto.UpdateEventCommentDto, userInfo dto.BaseUserInfo) Result {
+	comment, err := e.eventRepo.GetCommentByID(id)
+	if err != nil {
+		return Result{nil, err}
+	}
+	if userInfo.ID != comment.CreatedBy.ID.String() {
+		return Result{nil, MakeEndpointError("Isn't your comment!")}
+	}
+
+	err = e.eventRepo.UpdateComment(id, updateDto)
+	if err != nil {
+		return Result{false, MakeEndpointError("Cant update comment(s).")}
 	}
 	return Result{true, nil}
 }

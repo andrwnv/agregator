@@ -94,5 +94,25 @@ func (c *CommentController) deleteEventComment(ctx *gin.Context) {
 }
 
 func (c *CommentController) updateEventComment(ctx *gin.Context) {
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
+		return
+	}
 
+	id, err := uuid.Parse(ctx.Param("id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	var updateDto dto.UpdateEventCommentDto
+	if misc.HandleError(ctx, ctx.BindJSON(&updateDto), http.StatusBadRequest) {
+		return
+	}
+
+	result := c.endpoint.UpdateComment(id, updateDto, payload)
+	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }

@@ -198,6 +198,13 @@ func (repo *EventRepo) DeleteComments(commentId uuid.UUID) error {
 	return repo.repo.Database.Table("event_comments").Unscoped().Delete(&comment).Error
 }
 
+func (repo *EventRepo) UpdateComment(commentId uuid.UUID, updateDto dto.UpdateEventCommentDto) error {
+	var comment EventComment
+	repo.repo.Database.Where("id = ?", commentId).Find(&comment)
+	comment.CommentText = updateDto.CommentBody
+	return repo.repo.Database.Table("event_comments").Save(&comment).Error
+}
+
 // ----- Conversations -----
 
 func EventToEvent(event Event, photoUrls []string) dto.EventDto {

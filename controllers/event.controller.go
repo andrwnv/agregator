@@ -80,7 +80,7 @@ func (c *EventController) update(ctx *gin.Context) {
 		return
 	}
 
-	event, err := c.endpoint.GetFull(uuid.MustParse(ctx.Param("event_id")))
+	event, err := c.endpoint.GetFullEvent(uuid.MustParse(ctx.Param("event_id")))
 	if misc.HandleError(ctx, err, http.StatusNotFound) {
 		return
 	}
