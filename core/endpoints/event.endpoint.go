@@ -25,7 +25,8 @@ func NewEventEndpoint(
 
 func (e *EventEndpoint) Get(id uuid.UUID) Result {
 	event, err := e.eventRepo.Get(id)
-	return Result{repo.EventToEvent(event), err}
+	eventPhotos, _ := e.eventRepo.GetImages(id)
+	return Result{repo.EventToEvent(event, eventPhotos), err}
 }
 
 func (e *EventEndpoint) GetFull(id uuid.UUID) (repo.Event, error) {
@@ -46,7 +47,7 @@ func (e *EventEndpoint) Create(createDto dto.CreateEvent, userInfo dto.BaseUserI
 	// TODO: check begin, end datetime correctness for upd & create
 
 	event, err := e.eventRepo.Create(createDto, user, region)
-	return Result{repo.EventToEvent(event), err}
+	return Result{repo.EventToEvent(event, []string{}), err}
 }
 
 func (e *EventEndpoint) Update(id uuid.UUID, updateDto dto.UpdateEvent, userInfo dto.BaseUserInfo) Result {

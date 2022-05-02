@@ -130,6 +130,18 @@ func (repo *EventRepo) Update(id uuid.UUID, dto dto.UpdateEvent, region Region) 
 	return repo.repo.Database.Save(&event).Error
 }
 
+func (repo *EventRepo) GetImages(id uuid.UUID) ([]string, error) {
+	var photos []EventPhoto
+	err := repo.repo.Database.Where("event_id = ?", id).Take(&photos).Error
+
+	var result []string
+	for _, photo := range photos {
+		result = append(result, photo.Url)
+	}
+
+	return result, err
+}
+
 func (repo *EventRepo) CreateImages(id uuid.UUID, imgUrl string) error {
 	eventPhoto := EventPhoto{
 		ID:      uuid.New(),
@@ -148,7 +160,7 @@ func (repo *EventRepo) DeleteImages(url string) error {
 
 // ----- Conversations -----
 
-func EventToEvent(event Event) dto.EventDto {
+func EventToEvent(event Event, photoUrls []string) dto.EventDto {
 	return dto.EventDto{
 		ID:              event.ID,
 		BeginDate:       event.BeginDate.Unix(),
@@ -160,6 +172,7 @@ func EventToEvent(event Event) dto.EventDto {
 		Latitude:        event.Latitude,
 		CreatedBy:       UserToBaseUser(event.CreatedBy),
 		RegionInfo:      RegionToRegion(event.Region),
+		EventPhotos:     photoUrls,
 	}
 }
 
