@@ -155,7 +155,7 @@ func (repo *PlaceRepo) DeleteImages(url string) error {
 
 // ----- PlaceRepo methods: PlaceComment -----
 
-func (repo *PlaceRepo) CreateComment(commentDto dto.CreateEventCommentDto, user User, place Place) (PlaceComment, error) {
+func (repo *PlaceRepo) CreateComment(commentDto dto.CreatePlaceCommentDto, user User, place Place) (PlaceComment, error) {
 	placeComment := PlaceComment{
 		ID:          uuid.New(),
 		PlaceID:     place.ID,
@@ -168,7 +168,7 @@ func (repo *PlaceRepo) CreateComment(commentDto dto.CreateEventCommentDto, user 
 	return placeComment, repo.repo.Database.Create(&placeComment).Error
 }
 
-func (repo *PlaceRepo) GetComments(placeId uuid.UUID, page int, count int) (comments []EventComment, err error) {
+func (repo *PlaceRepo) GetComments(placeId uuid.UUID, page int, count int) (comments []PlaceComment, err error) {
 	switch {
 	case count > 15:
 		count = 15
@@ -210,7 +210,7 @@ func PlaceToPlace(place Place, photoUrls []string) dto.PlaceDto {
 		Latitude:        place.Latitude,
 		CreatedBy:       UserToBaseUser(place.CreatedBy),
 		RegionInfo:      RegionToRegion(place.Region),
-		EventPhotos:     photoUrls,
+		PlacePhotos:     photoUrls,
 	}
 }
 

@@ -4,8 +4,6 @@ import "github.com/google/uuid"
 
 type PlaceDto struct {
 	ID              uuid.UUID    `json:"id"`
-	BeginDate       int64        `json:"begin_date"`
-	EndDate         int64        `json:"end_date"`
 	PaymentRequired bool         `json:"payment_required"`
 	Title           string       `json:"title"`
 	Description     string       `json:"description"`
@@ -13,7 +11,7 @@ type PlaceDto struct {
 	Latitude        float32      `json:"latitude"`
 	CreatedBy       BaseUserInfo `json:"created_by"`
 	RegionInfo      RegionDto    `json:"region_info"`
-	EventPhotos     []string     `json:"event_photos"`
+	PlacePhotos     []string     `json:"place_photos"`
 }
 
 type CreatePlace struct {
@@ -26,8 +24,6 @@ type CreatePlace struct {
 }
 
 type UpdatePlace struct {
-	BeginDate       int64   `json:"begin_date"`
-	EndDate         int64   `json:"end_date"`
 	PaymentRequired bool    `json:"payment_required"`
 	Title           string  `json:"title"`
 	Description     string  `json:"description"`

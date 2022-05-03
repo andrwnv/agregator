@@ -56,13 +56,13 @@ type UserStoryRepo struct {
 	Repo *PgRepo
 }
 
-func NewUserStoryRepo(repo *PgRepo) *PlaceRepo {
+func NewUserStoryRepo(repo *PgRepo) *UserStoryRepo {
 	_ = repo.Database.AutoMigrate(&UserStory{},
 		&UserStoryLinkedEvent{},
 		&UserStoryLinkedPhoto{},
 		&UserStoryLinkedPlace{})
 
-	return &PlaceRepo{
+	return &UserStoryRepo{
 		Repo: repo,
 	}
 }
