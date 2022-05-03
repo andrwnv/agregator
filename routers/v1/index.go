@@ -9,6 +9,7 @@ import (
 func MakeRouter(
 	userCtrl *controllers.UserController,
 	eventCtrl *controllers.EventController,
+	placeCtrl *controllers.PlaceController,
 	authCtrl *controllers.AuthController,
 	fileCtrl *controllers.FileController,
 	commentsCtrl *controllers.CommentController) *gin.Engine {
@@ -21,6 +22,7 @@ func MakeRouter(
 	{
 		userCtrl.MakeRoutesV1(v1Group)
 		eventCtrl.MakeRoutesV1(v1Group)
+		placeCtrl.MakeRoutesV1(v1Group)
 		authCtrl.MakeRoutesV1(v1Group)
 		fileCtrl.MakeRoutesV1(v1Group)
 		commentsCtrl.MakeRoutesV1(v1Group)

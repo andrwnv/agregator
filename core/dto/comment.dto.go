@@ -32,7 +32,7 @@ type PlaceCommentDto struct {
 }
 
 type CreatePlaceCommentDto struct {
-	LinkedEventID string `json:"linked_place_id" binding:"required"`
+	LinkedPlaceID string `json:"linked_place_id" binding:"required"`
 	CommentBody   string `json:"comment_body" binding:"required"`
 }
 

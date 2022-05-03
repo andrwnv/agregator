@@ -25,7 +25,7 @@ func init() {
 	userRepo := repo.NewUserRepo(globalRepo)
 	regionRepo := repo.NewRegionRepo(globalRepo)
 	eventRepo := repo.NewEventRepo(globalRepo)
-	_ = repo.NewPlaceRepo(globalRepo)
+	placeRepo := repo.NewPlaceRepo(globalRepo)
 	_ = repo.NewUserStoryRepo(globalRepo)
 
 	mailer := services.MakeMailer(
@@ -36,6 +36,7 @@ func init() {
 
 	userEndpoint := endpoints.NewUserEndpoint(userRepo, mailer)
 	eventEndpoint := endpoints.NewEventEndpoint(eventRepo, userEndpoint, regionRepo)
+	placeEndpoint := endpoints.NewPlaceEndpoint(placeRepo, userEndpoint, regionRepo)
 	authEndpoint := endpoints.NewAuthEndpoint(userEndpoint)
 
 	fileCtrl := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userEndpoint)
@@ -43,9 +44,10 @@ func init() {
 	router := v1.MakeRouter(
 		controllers.NewUserController(userEndpoint),
 		controllers.NewEventController(eventEndpoint, fileCtrl),
+		controllers.NewPlaceController(placeEndpoint, fileCtrl),
 		controllers.NewAuthController(authEndpoint),
 		fileCtrl,
-		controllers.NewCommentController(eventEndpoint),
+		controllers.NewCommentController(eventEndpoint, placeEndpoint),
 	)
 
 	core.SERVER = &core.Server{
