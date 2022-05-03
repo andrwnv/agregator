@@ -50,12 +50,12 @@ type EventPhoto struct {
 func (ev *Event) BeforeDelete(tx *gorm.DB) error {
 	var eventPhotos []EventPhoto
 	// TODO: delete photos from dir.
-	if err := tx.Debug().Table("event_photos").Where("event_id = ?", ev.ID).Find(&eventPhotos).Unscoped().Delete(&eventPhotos).Error; err != nil {
+	if err := tx.Table("event_photos").Where("event_id = ?", ev.ID).Find(&eventPhotos).Unscoped().Delete(&eventPhotos).Error; err != nil {
 		return err
 	}
 
 	var eventComments []EventComment
-	if err := tx.Debug().Table("event_comments").Where("event_id = ?", ev.ID).Find(&eventComments).Unscoped().Delete(&eventComments).Error; err != nil {
+	if err := tx.Table("event_comments").Where("event_id = ?", ev.ID).Find(&eventComments).Unscoped().Delete(&eventComments).Error; err != nil {
 		return err
 	}
 
