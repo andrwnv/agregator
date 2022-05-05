@@ -8,11 +8,10 @@ import (
 type UserStory struct {
 	gorm.Model
 
-	ID              uuid.UUID `gorm:"primaryKey"`
-	PaymentRequired bool      `gorm:"default: false"`
-	CreatedByID     uuid.UUID `gorm:"not null"`
-	Title           string    `gorm:"not null"`
-	LongReadText    string    `gorm:"not null"`
+	ID           uuid.UUID `gorm:"primaryKey"`
+	CreatedByID  uuid.UUID `gorm:"not null"`
+	Title        string    `gorm:"not null"`
+	LongReadText string    `gorm:"not null"`
 
 	createdBy User
 }
