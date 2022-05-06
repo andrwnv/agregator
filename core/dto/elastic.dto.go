@@ -17,6 +17,11 @@ type AggregatorRecordDto struct {
 	LocationType string      `json:"location_type"`
 }
 
+type AggregatorRecordElasticDto struct {
+	ID                  string              `json:"_id"`
+	AggregatorRecordDto AggregatorRecordDto `json:"_source"`
+}
+
 type CreateAggregatorRecordDto struct {
 	LocationName string      `json:"location_name"`
 	Location     LocationDto `json:"location"`

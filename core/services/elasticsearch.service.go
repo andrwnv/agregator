@@ -1,7 +1,6 @@
 package services
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/andrwnv/event-aggregator/core/dto"
@@ -9,6 +8,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/estransport"
 	"github.com/google/uuid"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -98,7 +98,7 @@ func (es *EsService) Update(id uuid.UUID, updateDto dto.UpdateAggregatorRecordDt
 	return err
 }
 
-func (es *EsService) SearchNearby(userLocation dto.LocationDto, limitSize int) ([]dto.AggregatorRecordDto, error) {
+func (es *EsService) SearchNearby(userLocation dto.LocationDto, from int, limitSize int) ([]dto.AggregatorRecordDto, error) {
 	exp := 0.1
 
 	topLeftLocation := userLocation
@@ -117,31 +117,63 @@ func (es *EsService) SearchNearby(userLocation dto.LocationDto, limitSize int) (
 	topLeftLocation.Lon -= exp
 	bottomRightLocation.Lon += exp
 
-	geoBound := dto.GeoBounding{
-		TopLeft:     topLeftLocation,
-		BottomRight: bottomRightLocation,
-	}
-
 	query := map[string]interface{}{
-		"query": dto.GeoSearch{
-			GeoBoundingBox: geoBound,
+		"from": from * limitSize,
+		"size": limitSize,
+		"query": map[string]interface{}{
+			"geo_bounding_box": map[string]interface{}{
+				"location": dto.GeoBounding{
+					TopLeft:     topLeftLocation,
+					BottomRight: bottomRightLocation,
+				},
+			},
 		},
 	}
-	buffer := new(bytes.Buffer)
-	if err := json.NewEncoder(buffer).Encode(query); err != nil {
+
+	buffer, err := json.Marshal(query)
+	if err != nil {
 		return []dto.AggregatorRecordDto{}, err
 	}
 
-	result, err := es.client.Search(
-		es.client.Search.WithSize(limitSize),
+	response, err := es.client.Search(
 		es.client.Search.WithIndex(es.indexName),
-		es.client.Search.WithBody(buffer),
+		es.client.Search.WithBody(strings.NewReader(string(buffer))),
 		es.client.Search.WithPretty(),
 	)
-	defer result.Body.Close()
-	if err == nil && result != nil {
-		fmt.Println(*result)
+	defer response.Body.Close()
+
+	if err != nil || response.IsError() {
+		return []dto.AggregatorRecordDto{}, err
 	}
 
-	return []dto.AggregatorRecordDto{}, nil
+	// extract [hits][hits]
+	jsonResult, _ := readerToMapInterface(response.Body)
+	hits := jsonResult["hits"].(map[string]interface{})["hits"]
+
+	// convert hits to dto
+	var result []dto.AggregatorRecordDto
+	if hitsList, ok := hits.([]interface{}); ok {
+		for _, hitInfo := range hitsList {
+			if j, marshalErr := json.Marshal(hitInfo.(map[string]interface{})); marshalErr != nil {
+				var item dto.AggregatorRecordElasticDto
+				unmarshalErr := json.Unmarshal(j, &item)
+				if unmarshalErr == nil {
+					result = append(result, dto.AggregatorRecordDto{
+						ID:           item.ID,
+						LocationName: item.AggregatorRecordDto.LocationName,
+						Location:     item.AggregatorRecordDto.Location,
+						LocationType: item.AggregatorRecordDto.LocationType,
+					})
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func readerToMapInterface(reader io.Reader) (map[string]interface{}, error) {
+	jsonMap := make(map[string]interface{})
+	err := json.NewDecoder(reader).Decode(&jsonMap)
+	return jsonMap, err
 }
