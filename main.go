@@ -26,7 +26,7 @@ func init() {
 	regionRepo := repo.NewRegionRepo(globalRepo)
 	eventRepo := repo.NewEventRepo(globalRepo)
 	placeRepo := repo.NewPlaceRepo(globalRepo)
-	_ = repo.NewUserStoryRepo(globalRepo)
+	userStoryRepo := repo.NewUserStoryRepo(globalRepo)
 
 	mailer := services.MakeMailer(
 		os.Getenv("SMTP_HOST"),
@@ -38,6 +38,7 @@ func init() {
 	eventEndpoint := endpoints.NewEventEndpoint(eventRepo, userEndpoint, regionRepo)
 	placeEndpoint := endpoints.NewPlaceEndpoint(placeRepo, userEndpoint, regionRepo)
 	authEndpoint := endpoints.NewAuthEndpoint(userEndpoint)
+	userStoryEndpoint := endpoints.NewUserStoryEndpoint(userStoryRepo, userEndpoint, eventEndpoint, placeEndpoint)
 
 	fileCtrl := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userEndpoint)
 
@@ -48,12 +49,23 @@ func init() {
 		controllers.NewAuthController(authEndpoint),
 		fileCtrl,
 		controllers.NewCommentController(eventEndpoint, placeEndpoint),
+		controllers.NewUserStoryController(userStoryEndpoint, fileCtrl),
 	)
 
 	core.SERVER = &core.Server{
 		Router:     router,
 		JwtService: services.JWTAuthService(),
 	}
+}
+
+type Location struct {
+	Lat float32 `json:"lat"`
+	Lon float32 `json:"lon"`
+}
+
+type DataSetTest struct {
+	Text     string   `json:"text"`
+	Location Location `json:"location"`
 }
 
 func main() {
@@ -65,8 +77,27 @@ func main() {
 	host := os.Getenv("HOST")
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
+	//es := services.NewEsService()
+	//_ = es.Create(dto.CreateAggregatorRecordDto{
+	//	LocationName: "Соляной переулок, 17",
+	//	Location: dto.LocationDto{
+	//		Lat: 56.499446,
+	//		Lon: 84.964161,
+	//	},
+	//	LocationType: dto.EVENT_LOCATION_TYPE,
+	//})
+	//es.SearchNearby(dto.LocationDto{
+	//	Lat: 56.525840,
+	//	Lon: 84.963095,
+	//}, 1, 2)
+	//
+	//if err != nil {
+	//	return
+	//}
+
 	fmt.Printf("Server Running on Port: %s:%d\n", host, port)
 	err = http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), core.SERVER.Router)
+
 	if err != nil {
 		misc.ReportCritical("Cant start HTTP server")
 	}
