@@ -12,30 +12,27 @@ type UserStory struct {
 	CreatedByID  uuid.UUID `gorm:"not null"`
 	Title        string    `gorm:"not null"`
 	LongReadText string    `gorm:"not null"`
-
-	createdBy User
+	CreatedBy    User      `gorm:"foreignKey:CreatedByID;references:ID"`
 }
 
 type UserStoryLinkedEvent struct {
 	gorm.Model
 
-	ID      uuid.UUID `gorm:"primaryKey"`
-	EventID uuid.UUID `gorm:"not null"`
-	StoryID uuid.UUID `gorm:"not null"`
-
-	linkedEvent Place `gorm:"foreignKey:event_id;references:id"`
-	createdBy   User  `gorm:"foreignKey:created_by_id;references:id"`
+	ID          uuid.UUID `gorm:"primaryKey"`
+	EventID     uuid.UUID `gorm:"not null"`
+	StoryID     uuid.UUID `gorm:"not null"`
+	Story       UserStory `gorm:"foreignKey:StoryID;references:ID"`
+	LinkedEvent Event     `gorm:"foreignKey:EventID;references:ID"`
 }
 
 type UserStoryLinkedPlace struct {
 	gorm.Model
 
-	ID      uuid.UUID `gorm:"primaryKey"`
-	PlaceID uuid.UUID `gorm:"not null"`
-	StoryID uuid.UUID `gorm:"not null"`
-
-	linkedEvent Place `gorm:"foreignKey:place_id;references:id"`
-	createdBy   User  `gorm:"foreignKey:created_by_id;references:id"`
+	ID          uuid.UUID `gorm:"primaryKey"`
+	PlaceID     uuid.UUID `gorm:"not null"`
+	StoryID     uuid.UUID `gorm:"not null"`
+	Story       UserStory `gorm:"foreignKey:StoryID;references:ID"`
+	LinkedPlace Place     `gorm:"foreignKey:PlaceID;references:ID"`
 }
 
 type UserStoryLinkedPhoto struct {
@@ -44,9 +41,26 @@ type UserStoryLinkedPhoto struct {
 	ID      uuid.UUID `gorm:"primaryKey"`
 	StoryID uuid.UUID `gorm:"not null"`
 	Url     string    `gorm:"not null"`
-	Size    int       `gorm:"not null"`
+	Story   UserStory `gorm:"foreignKey:StoryID;references:ID"`
+}
 
-	story UserStory
+func (us *UserStory) BeforeDelete(tx *gorm.DB) error {
+	var linkedEvents []UserStoryLinkedEvent
+	if err := tx.Table("user_story_linked_events").Where("story_id = ?", us.ID).Find(&linkedEvents).Unscoped().Delete(&linkedEvents).Error; err != nil {
+		return err
+	}
+
+	var linkedPlaces []UserStoryLinkedPlace
+	if err := tx.Table("user_story_linked_places").Where("story_id = ?", us.ID).Find(&linkedPlaces).Unscoped().Delete(&linkedPlaces).Error; err != nil {
+		return err
+	}
+
+	var linkedPhotos []UserStoryLinkedPhoto
+	if err := tx.Table("user_story_linked_photos").Where("story_id = ?", us.ID).Find(&linkedPhotos).Unscoped().Delete(&linkedPhotos).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ----- UserStoryRepo methods -----
