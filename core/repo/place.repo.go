@@ -57,6 +57,11 @@ func (ev *Place) BeforeDelete(tx *gorm.DB) error {
 		return err
 	}
 
+	var linkedPlaces []UserStoryLinkedPlace
+	if err := tx.Table("user_story_linked_places").Where("place_id = ?", ev.ID).Find(&linkedPlaces).Unscoped().Delete(&linkedPlaces).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 

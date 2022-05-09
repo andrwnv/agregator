@@ -59,6 +59,11 @@ func (ev *Event) BeforeDelete(tx *gorm.DB) error {
 		return err
 	}
 
+	var linkedEvents []UserStoryLinkedEvent
+	if err := tx.Table("user_story_linked_events").Where("event_id = ?", ev.ID).Find(&linkedEvents).Unscoped().Delete(&linkedEvents).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 

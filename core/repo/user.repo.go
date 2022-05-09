@@ -23,7 +23,21 @@ type User struct {
 
 func (u *User) BeforeDelete(tx *gorm.DB) error {
 	var events []Event
-	return tx.Table("events").Where("created_by_id = ?", u.ID).Find(&events).Unscoped().Delete(&events).Error
+	if err := tx.Table("events").Where("created_by_id = ?", u.ID).Find(&events).Unscoped().Delete(&events).Error; err != nil {
+		return err
+	}
+
+	var places []Place
+	if err := tx.Table("places").Where("created_by_id = ?", u.ID).Find(&places).Unscoped().Delete(&places).Error; err != nil {
+		return err
+	}
+
+	var stories []UserStory
+	if err := tx.Table("user_stories").Where("created_by_id = ?", u.ID).Find(&stories).Unscoped().Delete(&stories).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ----- UserRepo methods -----
