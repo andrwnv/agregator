@@ -27,6 +27,7 @@ func init() {
 	eventRepo := repo.NewEventRepo(globalRepo)
 	placeRepo := repo.NewPlaceRepo(globalRepo)
 	userStoryRepo := repo.NewUserStoryRepo(globalRepo)
+	_ = repo.NewLikedRepo(globalRepo)
 
 	mailer := services.MakeMailer(
 		os.Getenv("SMTP_HOST"),
