@@ -37,6 +37,11 @@ func (u *User) BeforeDelete(tx *gorm.DB) error {
 		return err
 	}
 
+	var likes []Liked
+	if err := tx.Table("likeds").Where("user_id = ?", u.ID).Find(&likes).Unscoped().Delete(&likes).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 
