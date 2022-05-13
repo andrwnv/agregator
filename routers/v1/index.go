@@ -18,9 +18,9 @@ func MakeRouter(
 
 	engine := gin.New()
 	engine.Use(gin.Logger())
+	engine.Use(middleware.CORSMiddleware())
 
 	v1Group := engine.Group("/api/v1")
-	v1Group.Use(middleware.CORSMiddleware())
 	{
 		userCtrl.MakeRoutesV1(v1Group)
 		eventCtrl.MakeRoutesV1(v1Group)
