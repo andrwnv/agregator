@@ -3,8 +3,8 @@ package controllers
 import (
 	"errors"
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -13,13 +13,13 @@ import (
 )
 
 type UserStoryController struct {
-	endpoint       *endpoints.UserStoryEndpoint
+	usecase        *usecases.UserStoryUsecase
 	fileController *FileController
 }
 
-func NewUserStoryController(endpoint *endpoints.UserStoryEndpoint, fileCtrl *FileController) *UserStoryController {
+func NewUserStoryController(storyUsecase *usecases.UserStoryUsecase, fileCtrl *FileController) *UserStoryController {
 	return &UserStoryController{
-		endpoint:       endpoint,
+		usecase:        storyUsecase,
 		fileController: fileCtrl,
 	}
 }
@@ -44,7 +44,7 @@ func (c *UserStoryController) get(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Get(id)
+	result := c.usecase.Get(id)
 	if misc.HandleError(ctx, result.Error, http.StatusNotFound) {
 		return
 	}
@@ -65,7 +65,7 @@ func (c *UserStoryController) delete(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Delete(storyId, payload).Error, http.StatusInternalServerError) {
+	if misc.HandleError(ctx, c.usecase.Delete(storyId, payload).Error, http.StatusInternalServerError) {
 		return
 	}
 	ctx.Status(http.StatusOK)
@@ -77,7 +77,7 @@ func (c *UserStoryController) update(ctx *gin.Context) {
 		return
 	}
 
-	story, err := c.endpoint.GetFullStory(uuid.MustParse(ctx.Param("id")))
+	story, err := c.usecase.GetFullStory(uuid.MustParse(ctx.Param("id")))
 	if misc.HandleError(ctx, err, http.StatusNotFound) {
 		return
 	}
@@ -87,12 +87,12 @@ func (c *UserStoryController) update(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Update(story.ID, updateDto, payload).Error, http.StatusForbidden) {
+	if misc.HandleError(ctx, c.usecase.Update(story.ID, updateDto, payload).Error, http.StatusForbidden) {
 		return
 	}
 
-	c.endpoint.UpdateLinkedPlaces(story.ID, payload, updateDto.PlaceToCreate, updateDto.PlaceToDelete)
-	c.endpoint.UpdateLinkedEvents(story.ID, payload, updateDto.EventToCreate, updateDto.EventToDelete)
+	c.usecase.UpdateLinkedPlaces(story.ID, payload, updateDto.PlaceToCreate, updateDto.PlaceToDelete)
+	c.usecase.UpdateLinkedEvents(story.ID, payload, updateDto.EventToCreate, updateDto.EventToDelete)
 
 	ctx.Status(http.StatusNoContent)
 }
@@ -115,7 +115,7 @@ func (c *UserStoryController) create(ctx *gin.Context) {
 	}
 
 	misc.ReportInfo(createDto.Events[0].String())
-	result := c.endpoint.Create(createDto.Content, createDto.Events, createDto.Places, payload)
+	result := c.usecase.Create(createDto.Content, createDto.Events, createDto.Places, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -143,7 +143,7 @@ func (c *UserStoryController) createStoryImages(ctx *gin.Context) {
 		}
 	}
 
-	result := c.endpoint.UpdateImages(eventId, payload, loadedFiles, []string{})
+	result := c.usecase.UpdateImages(eventId, payload, loadedFiles, []string{})
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}
@@ -171,7 +171,7 @@ func (c *UserStoryController) deleteStoryImages(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.UpdateImages(eventId, payload, []string{}, files.Urls)
+	result := c.usecase.UpdateImages(eventId, payload, []string{}, files.Urls)
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}

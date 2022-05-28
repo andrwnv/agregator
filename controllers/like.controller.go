@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -12,12 +12,12 @@ import (
 )
 
 type LikeController struct {
-	endpoint *endpoints.LikeEndpoint
+	usecase *usecases.LikeUsecase
 }
 
-func NewLikeController(endpoint *endpoints.LikeEndpoint) *LikeController {
+func NewLikeController(usecase *usecases.LikeUsecase) *LikeController {
 	return &LikeController{
-		endpoint: endpoint,
+		usecase: usecase,
 	}
 }
 
@@ -43,7 +43,7 @@ func (c *LikeController) get(ctx *gin.Context) {
 		count = 10
 	}
 
-	result := c.endpoint.Get(payload, page, count)
+	result := c.usecase.Get(payload, page, count)
 	if misc.HandleError(ctx, result.Error, http.StatusNoContent) {
 		return
 	}
@@ -64,7 +64,7 @@ func (c *LikeController) like(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Like(likeDto, payload)
+	result := c.usecase.Like(likeDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -85,7 +85,7 @@ func (c *LikeController) dislike(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Dislike(id, payload).Error, http.StatusInternalServerError) {
+	if misc.HandleError(ctx, c.usecase.Dislike(id, payload).Error, http.StatusInternalServerError) {
 		return
 	}
 	ctx.Status(http.StatusOK)

@@ -2,18 +2,18 @@ package controllers
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AuthController struct {
-	endpoint *endpoints.AuthEndpoint
+	usecase *usecases.AuthUsecase
 }
 
-func NewAuthController(endpoint *endpoints.AuthEndpoint) *AuthController {
-	return &AuthController{endpoint: endpoint}
+func NewAuthController(usecase *usecases.AuthUsecase) *AuthController {
+	return &AuthController{usecase: usecase}
 }
 
 func (c *AuthController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
@@ -30,7 +30,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Login(credential)
+	result := c.usecase.Login(credential)
 	if misc.HandleError(ctx, result.Error, http.StatusUnauthorized) {
 		return
 	}

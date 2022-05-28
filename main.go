@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/andrwnv/event-aggregator/controllers"
 	"github.com/andrwnv/event-aggregator/core"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
 	"github.com/andrwnv/event-aggregator/core/services"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/misc"
 	v1 "github.com/andrwnv/event-aggregator/routers/v1"
 	"github.com/joho/godotenv"
@@ -35,24 +35,24 @@ func init() {
 		os.Getenv("SMTP_PASSWORD"),
 		os.Getenv("SMTP_USER"))
 
-	userEndpoint := endpoints.NewUserEndpoint(userRepo, mailer)
-	eventEndpoint := endpoints.NewEventEndpoint(eventRepo, userEndpoint, regionRepo)
-	placeEndpoint := endpoints.NewPlaceEndpoint(placeRepo, userEndpoint, regionRepo)
-	authEndpoint := endpoints.NewAuthEndpoint(userEndpoint)
-	userStoryEndpoint := endpoints.NewUserStoryEndpoint(userStoryRepo, userEndpoint, eventEndpoint, placeEndpoint)
-	likedEndpoint := endpoints.NewLikeEndpoint(likedRepo, userEndpoint, eventEndpoint, placeEndpoint)
+	userUsecase := usecases.NewUserUsecase(userRepo, mailer)
+	eventUsecase := usecases.NewEventUsecase(eventRepo, userUsecase, regionRepo)
+	placeUsecase := usecases.NewPlaceUsecase(placeRepo, userUsecase, regionRepo)
+	authUsecase := usecases.NewAuthUsecase(userUsecase)
+	storyUsecase := usecases.NewUserStoryUsecase(userStoryRepo, userUsecase, eventUsecase, placeUsecase)
+	likeUsecase := usecases.NewLikeUsecase(likedRepo, userUsecase, eventUsecase, placeUsecase)
 
-	fileCtrl := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userEndpoint)
+	fileCtrl := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userUsecase)
 
 	router := v1.MakeRouter(
-		controllers.NewUserController(userEndpoint),
-		controllers.NewEventController(eventEndpoint, fileCtrl),
-		controllers.NewPlaceController(placeEndpoint, fileCtrl),
-		controllers.NewAuthController(authEndpoint),
+		controllers.NewUserController(userUsecase),
+		controllers.NewEventController(eventUsecase, fileCtrl),
+		controllers.NewPlaceController(placeUsecase, fileCtrl),
+		controllers.NewAuthController(authUsecase),
 		fileCtrl,
-		controllers.NewCommentController(eventEndpoint, placeEndpoint),
-		controllers.NewUserStoryController(userStoryEndpoint, fileCtrl),
-		controllers.NewLikeController(likedEndpoint),
+		controllers.NewCommentController(eventUsecase, placeUsecase),
+		controllers.NewUserStoryController(storyUsecase, fileCtrl),
+		controllers.NewLikeController(likeUsecase),
 	)
 
 	core.SERVER = &core.Server{

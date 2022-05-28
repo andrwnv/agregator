@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ import (
 
 type FileController struct {
 	DownloadPath    string
-	userEndpoint    *endpoints.UserEndpoint
+	userUsecase     *usecases.UserUsecase
 	httpContentType map[string]string
 }
 
@@ -27,10 +27,10 @@ func handleSaveError(ctx *gin.Context) {
 	})
 }
 
-func NewFileController(rootPath string, userRepo *endpoints.UserEndpoint) *FileController {
+func NewFileController(rootPath string, userUsecase *usecases.UserUsecase) *FileController {
 	return &FileController{
 		DownloadPath: rootPath,
-		userEndpoint: userRepo,
+		userUsecase:  userUsecase,
 		httpContentType: map[string]string{
 			".jpg": "image/jpeg",
 			".png": "image/png",
@@ -99,14 +99,14 @@ func (c *FileController) UploadAvatar(ctx *gin.Context) {
 		}
 	}
 
-	user, err := c.userEndpoint.GetFull(payload)
+	user, err := c.userUsecase.GetFull(payload)
 	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant extract user from database.") {
 		return
 	}
 
 	updateDto := repo.UserToUpdateUserDto(user)
 	updateDto.PhotoUrl = newFileName
-	result := c.userEndpoint.Update(uuid.MustParse(payload.ID), updateDto)
+	result := c.userUsecase.Update(uuid.MustParse(payload.ID), updateDto)
 
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError, "Cant update user info.") {
 		return

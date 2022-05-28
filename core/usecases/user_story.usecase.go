@@ -1,4 +1,4 @@
-package endpoints
+package usecases
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
@@ -6,31 +6,31 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserStoryEndpoint struct {
+type UserStoryUsecase struct {
 	userStoryRepo *repo.UserStoryRepo
-	userEndpoint  *UserEndpoint
-	eventEndpoint *EventEndpoint
-	placeEndpoint *PlaceEndpoint
+	userUsecase   *UserUsecase
+	eventUsecase  *EventUsecase
+	placeUsecase  *PlaceUsecase
 }
 
-func NewUserStoryEndpoint(userStoryRepo *repo.UserStoryRepo,
-	userEndpoint *UserEndpoint,
-	eventEndpoint *EventEndpoint,
-	placeEndpoint *PlaceEndpoint) *UserStoryEndpoint {
+func NewUserStoryUsecase(userStoryRepo *repo.UserStoryRepo,
+	userUsecase *UserUsecase,
+	eventUsecase *EventUsecase,
+	placeUsecase *PlaceUsecase) *UserStoryUsecase {
 
-	return &UserStoryEndpoint{
+	return &UserStoryUsecase{
 		userStoryRepo: userStoryRepo,
-		userEndpoint:  userEndpoint,
-		eventEndpoint: eventEndpoint,
-		placeEndpoint: placeEndpoint,
+		userUsecase:   userUsecase,
+		eventUsecase:  eventUsecase,
+		placeUsecase:  placeUsecase,
 	}
 }
 
-func (e *UserStoryEndpoint) GetFullStory(id uuid.UUID) (repo.UserStory, error) {
+func (e *UserStoryUsecase) GetFullStory(id uuid.UUID) (repo.UserStory, error) {
 	return e.userStoryRepo.GetStoryByID(id)
 }
 
-func (e *UserStoryEndpoint) Get(id uuid.UUID) Result {
+func (e *UserStoryUsecase) Get(id uuid.UUID) Result {
 	story, err := e.userStoryRepo.GetStoryByID(id)
 	events, _ := e.userStoryRepo.GetLinkedEvent(id)
 	places, _ := e.userStoryRepo.GetLinkedPlace(id)
@@ -39,20 +39,20 @@ func (e *UserStoryEndpoint) Get(id uuid.UUID) Result {
 	return Result{repo.StoryToStory(story, events, places, photos), err}
 }
 
-func (e *UserStoryEndpoint) Create(
+func (e *UserStoryUsecase) Create(
 	createDto dto.CreateUserStoryDto,
 	eventsId []uuid.UUID,
 	placesId []uuid.UUID,
 	userInfo dto.BaseUserInfo) Result {
 
-	user, err := e.userEndpoint.GetFull(userInfo)
+	user, err := e.userUsecase.GetFull(userInfo)
 	if err != nil {
-		return Result{nil, MakeEndpointError("Cant find user for create story.")}
+		return Result{nil, MakeUsecaseError("Cant find user for create story.")}
 	}
 
 	var events []repo.Event
 	for _, id := range eventsId {
-		event, extractErr := e.eventEndpoint.GetFullEvent(id)
+		event, extractErr := e.eventUsecase.GetFullEvent(id)
 		if extractErr == nil {
 			events = append(events, event)
 		}
@@ -60,7 +60,7 @@ func (e *UserStoryEndpoint) Create(
 
 	var places []repo.Place
 	for _, id := range placesId {
-		place, extractErr := e.placeEndpoint.GetFullPlace(id)
+		place, extractErr := e.placeUsecase.GetFullPlace(id)
 		if extractErr == nil {
 			places = append(places, place)
 		}
@@ -72,37 +72,37 @@ func (e *UserStoryEndpoint) Create(
 	return Result{repo.StoryToStory(story, linkedEvents, linkedPlaces, []string{}), err}
 }
 
-func (e *UserStoryEndpoint) Delete(id uuid.UUID, userInfo dto.BaseUserInfo) Result {
+func (e *UserStoryUsecase) Delete(id uuid.UUID, userInfo dto.BaseUserInfo) Result {
 	story, err := e.userStoryRepo.GetStoryByID(id)
 	if err != nil {
 		return Result{false, err}
 	}
 
 	if userInfo.ID != story.CreatedBy.ID.String() {
-		return Result{false, MakeEndpointError("Isn't your story!")}
+		return Result{false, MakeUsecaseError("Isn't your story!")}
 	}
 
 	err = e.userStoryRepo.Delete(id)
 	return Result{err != nil, err}
 }
 
-func (e *UserStoryEndpoint) Update(id uuid.UUID, updateDto dto.UpdateUserStoryDto, userInfo dto.BaseUserInfo) Result {
+func (e *UserStoryUsecase) Update(id uuid.UUID, updateDto dto.UpdateUserStoryDto, userInfo dto.BaseUserInfo) Result {
 	story, err := e.userStoryRepo.GetStoryByID(id)
 	if err != nil {
 		return Result{false, err}
 	}
 
 	if userInfo.ID != story.CreatedBy.ID.String() {
-		return Result{false, MakeEndpointError("Isn't your story!")}
+		return Result{false, MakeUsecaseError("Isn't your story!")}
 	}
 
 	err = e.userStoryRepo.Update(id, updateDto)
 	return Result{err != nil, err}
 }
 
-// ----- UserStoryEndpoint: Linked images -----
+// ----- UserStoryUsecase: Linked images -----
 
-func (e *UserStoryEndpoint) UpdateImages(id uuid.UUID, userInfo dto.BaseUserInfo,
+func (e *UserStoryUsecase) UpdateImages(id uuid.UUID, userInfo dto.BaseUserInfo,
 	filesToCreate []string, filesToDelete []string) Result {
 
 	story, err := e.userStoryRepo.GetStoryByID(id)
@@ -111,7 +111,7 @@ func (e *UserStoryEndpoint) UpdateImages(id uuid.UUID, userInfo dto.BaseUserInfo
 	}
 
 	if userInfo.ID != story.CreatedBy.ID.String() {
-		return Result{false, MakeEndpointError("Isn't your story!")}
+		return Result{false, MakeUsecaseError("Isn't your story!")}
 	}
 
 	for _, url := range filesToCreate {
@@ -132,9 +132,9 @@ func (e *UserStoryEndpoint) UpdateImages(id uuid.UUID, userInfo dto.BaseUserInfo
 	return Result{true, nil}
 }
 
-// ----- UserStoryEndpoint: Linked events -----
+// ----- UserStoryUsecase: Linked events -----
 
-func (e *UserStoryEndpoint) UpdateLinkedEvents(id uuid.UUID, userInfo dto.BaseUserInfo,
+func (e *UserStoryUsecase) UpdateLinkedEvents(id uuid.UUID, userInfo dto.BaseUserInfo,
 	toCreate []string, toDelete []string) Result {
 
 	story, err := e.userStoryRepo.GetStoryByID(id)
@@ -143,11 +143,11 @@ func (e *UserStoryEndpoint) UpdateLinkedEvents(id uuid.UUID, userInfo dto.BaseUs
 	}
 
 	if userInfo.ID != story.CreatedBy.ID.String() {
-		return Result{false, MakeEndpointError("Isn't your story!")}
+		return Result{false, MakeUsecaseError("Isn't your story!")}
 	}
 
 	for _, eventId := range toCreate {
-		fullEvent, getErr := e.eventEndpoint.GetFullEvent(uuid.MustParse(eventId))
+		fullEvent, getErr := e.eventUsecase.GetFullEvent(uuid.MustParse(eventId))
 		if getErr == nil {
 			err := e.userStoryRepo.AddLinkedEvent(story.ID, fullEvent)
 			if err != nil {
@@ -166,9 +166,9 @@ func (e *UserStoryEndpoint) UpdateLinkedEvents(id uuid.UUID, userInfo dto.BaseUs
 	return Result{true, nil}
 }
 
-// ----- UserStoryEndpoint: Linked places -----
+// ----- UserStoryUsecase: Linked places -----
 
-func (e *UserStoryEndpoint) UpdateLinkedPlaces(id uuid.UUID, userInfo dto.BaseUserInfo,
+func (e *UserStoryUsecase) UpdateLinkedPlaces(id uuid.UUID, userInfo dto.BaseUserInfo,
 	toCreate []string, toDelete []string) Result {
 
 	story, err := e.userStoryRepo.GetStoryByID(id)
@@ -177,11 +177,11 @@ func (e *UserStoryEndpoint) UpdateLinkedPlaces(id uuid.UUID, userInfo dto.BaseUs
 	}
 
 	if userInfo.ID != story.CreatedBy.ID.String() {
-		return Result{false, MakeEndpointError("Isn't your story!")}
+		return Result{false, MakeUsecaseError("Isn't your story!")}
 	}
 
 	for _, placeId := range toCreate {
-		fullPlace, getErr := e.placeEndpoint.GetFullPlace(uuid.MustParse(placeId))
+		fullPlace, getErr := e.placeUsecase.GetFullPlace(uuid.MustParse(placeId))
 		if getErr == nil {
 			err := e.userStoryRepo.AddLinkedPlace(story.ID, fullPlace)
 			if err != nil {

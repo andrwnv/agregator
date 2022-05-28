@@ -1,4 +1,4 @@
-package endpoints
+package usecases
 
 type Result struct {
 	Value interface{}

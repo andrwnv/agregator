@@ -14,14 +14,14 @@ func AuthorizeJWTMiddleware() gin.HandlerFunc {
 		const BearerSchema = "Bearer"
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		tokenString := strings.ReplaceAll(authHeader[len(BearerSchema):], " ", "")
 		token, err := core.SERVER.JwtService.ValidateToken(tokenString)
 		if err != nil {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 		if token.Valid {

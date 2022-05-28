@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -12,12 +12,12 @@ import (
 )
 
 type UserController struct {
-	endpoint *endpoints.UserEndpoint
+	usecase *usecases.UserUsecase
 }
 
-func NewUserController(endpoint *endpoints.UserEndpoint) *UserController {
+func NewUserController(usecase *usecases.UserUsecase) *UserController {
 	return &UserController{
-		endpoint: endpoint,
+		usecase: usecase,
 	}
 }
 
@@ -52,7 +52,7 @@ func (c *UserController) create(ctx *gin.Context) {
 		return
 	}
 
-	res := c.endpoint.Create(createDto)
+	res := c.usecase.Create(createDto)
 	if misc.HandleError(ctx, res.Error, http.StatusConflict) {
 		return
 	}
@@ -68,7 +68,7 @@ func (c *UserController) delete(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Delete(payload).Error, http.StatusInternalServerError) {
+	if misc.HandleError(ctx, c.usecase.Delete(payload).Error, http.StatusInternalServerError) {
 		return
 	}
 
@@ -81,7 +81,7 @@ func (c *UserController) getByID(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.GetByID(id)
+	result := c.usecase.GetByID(id)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -96,7 +96,7 @@ func (c *UserController) update(ctx *gin.Context) {
 		return
 	}
 
-	user, err := c.endpoint.GetFull(payload)
+	user, err := c.usecase.GetFull(payload)
 	if misc.HandleError(ctx, err, http.StatusInternalServerError, "Cant extract user from database") {
 		return
 	}
@@ -104,7 +104,7 @@ func (c *UserController) update(ctx *gin.Context) {
 	updateDto := repo.UserToUpdateUserDto(user)
 	_ = ctx.BindJSON(&updateDto)
 
-	result := c.endpoint.Update(user.ID, updateDto)
+	result := c.usecase.Update(user.ID, updateDto)
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}
@@ -120,7 +120,7 @@ func (c *UserController) verify(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Verify(id)
+	result := c.usecase.Verify(id)
 	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
 		return
 	}

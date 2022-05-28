@@ -3,8 +3,8 @@ package controllers
 import (
 	"errors"
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -13,13 +13,13 @@ import (
 )
 
 type PlaceController struct {
-	endpoint       *endpoints.PlaceEndpoint
+	usecase        *usecases.PlaceUsecase
 	fileController *FileController
 }
 
-func NewPlaceController(endpoint *endpoints.PlaceEndpoint, fileCtrl *FileController) *PlaceController {
+func NewPlaceController(usecase *usecases.PlaceUsecase, fileCtrl *FileController) *PlaceController {
 	return &PlaceController{
-		endpoint:       endpoint,
+		usecase:        usecase,
 		fileController: fileCtrl,
 	}
 }
@@ -43,7 +43,7 @@ func (c *PlaceController) get(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Get(id)
+	result := c.usecase.Get(id)
 	if misc.HandleError(ctx, result.Error, http.StatusNotFound) {
 		return
 	}
@@ -64,7 +64,7 @@ func (c *PlaceController) create(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Create(createDto, payload)
+	result := c.usecase.Create(createDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -80,7 +80,7 @@ func (c *PlaceController) update(ctx *gin.Context) {
 		return
 	}
 
-	place, err := c.endpoint.GetFullPlace(uuid.MustParse(ctx.Param("place_id")))
+	place, err := c.usecase.GetFullPlace(uuid.MustParse(ctx.Param("place_id")))
 	if misc.HandleError(ctx, err, http.StatusNotFound) {
 		return
 	}
@@ -90,7 +90,7 @@ func (c *PlaceController) update(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Update(place.ID, updateDto, payload).Error, http.StatusForbidden) {
+	if misc.HandleError(ctx, c.usecase.Update(place.ID, updateDto, payload).Error, http.StatusForbidden) {
 		return
 	}
 
@@ -108,7 +108,7 @@ func (c *PlaceController) delete(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Delete(placeId, payload).Error, http.StatusInternalServerError) {
+	if misc.HandleError(ctx, c.usecase.Delete(placeId, payload).Error, http.StatusInternalServerError) {
 		return
 	}
 	ctx.Status(http.StatusOK)
@@ -132,7 +132,7 @@ func (c *PlaceController) createPlaceImages(ctx *gin.Context) {
 		}
 	}
 
-	result := c.endpoint.UpdatePlaceImages(placeId, payload, loadedFiles, []string{})
+	result := c.usecase.UpdatePlaceImages(placeId, payload, loadedFiles, []string{})
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}
@@ -160,7 +160,7 @@ func (c *PlaceController) deletePlaceImages(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.UpdatePlaceImages(placeId, payload, []string{}, files.Urls)
+	result := c.usecase.UpdatePlaceImages(placeId, payload, []string{}, files.Urls)
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}

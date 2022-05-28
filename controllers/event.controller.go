@@ -3,8 +3,8 @@ package controllers
 import (
 	"errors"
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -13,13 +13,13 @@ import (
 )
 
 type EventController struct {
-	endpoint       *endpoints.EventEndpoint
+	usecase        *usecases.EventUsecase
 	fileController *FileController
 }
 
-func NewEventController(endpoint *endpoints.EventEndpoint, fileCtrl *FileController) *EventController {
+func NewEventController(usecase *usecases.EventUsecase, fileCtrl *FileController) *EventController {
 	return &EventController{
-		endpoint:       endpoint,
+		usecase:        usecase,
 		fileController: fileCtrl,
 	}
 }
@@ -43,7 +43,7 @@ func (c *EventController) get(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Get(id)
+	result := c.usecase.Get(id)
 	if misc.HandleError(ctx, result.Error, http.StatusNotFound) {
 		return
 	}
@@ -64,7 +64,7 @@ func (c *EventController) create(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.Create(createDto, payload)
+	result := c.usecase.Create(createDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -80,7 +80,7 @@ func (c *EventController) update(ctx *gin.Context) {
 		return
 	}
 
-	event, err := c.endpoint.GetFullEvent(uuid.MustParse(ctx.Param("event_id")))
+	event, err := c.usecase.GetFullEvent(uuid.MustParse(ctx.Param("event_id")))
 	if misc.HandleError(ctx, err, http.StatusNotFound) {
 		return
 	}
@@ -90,7 +90,7 @@ func (c *EventController) update(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Update(event.ID, updateDto, payload).Error, http.StatusForbidden) {
+	if misc.HandleError(ctx, c.usecase.Update(event.ID, updateDto, payload).Error, http.StatusForbidden) {
 		return
 	}
 
@@ -108,7 +108,7 @@ func (c *EventController) delete(ctx *gin.Context) {
 		return
 	}
 
-	if misc.HandleError(ctx, c.endpoint.Delete(eventId, payload).Error, http.StatusInternalServerError) {
+	if misc.HandleError(ctx, c.usecase.Delete(eventId, payload).Error, http.StatusInternalServerError) {
 		return
 	}
 	ctx.Status(http.StatusOK)
@@ -132,7 +132,7 @@ func (c *EventController) createEventImages(ctx *gin.Context) {
 		}
 	}
 
-	result := c.endpoint.UpdateEventImages(eventId, payload, loadedFiles, []string{})
+	result := c.usecase.UpdateEventImages(eventId, payload, loadedFiles, []string{})
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}
@@ -160,7 +160,7 @@ func (c *EventController) deleteEventImages(ctx *gin.Context) {
 		return
 	}
 
-	result := c.endpoint.UpdateEventImages(eventId, payload, []string{}, files.Urls)
+	result := c.usecase.UpdateEventImages(eventId, payload, []string{}, files.Urls)
 	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
 		return
 	}

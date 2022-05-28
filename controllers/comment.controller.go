@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
-	"github.com/andrwnv/event-aggregator/core/endpoints"
+	"github.com/andrwnv/event-aggregator/core/usecases"
 	"github.com/andrwnv/event-aggregator/middleware"
 	"github.com/andrwnv/event-aggregator/misc"
 	"github.com/gin-gonic/gin"
@@ -12,14 +12,14 @@ import (
 )
 
 type CommentController struct {
-	eventEndpoint *endpoints.EventEndpoint
-	placeEndpoint *endpoints.PlaceEndpoint
+	eventUsecase *usecases.EventUsecase
+	placeUsecase *usecases.PlaceUsecase
 }
 
-func NewCommentController(eventEndpoint *endpoints.EventEndpoint, placeEndpoint *endpoints.PlaceEndpoint) *CommentController {
+func NewCommentController(eventUsecase *usecases.EventUsecase, placeUsecase *usecases.PlaceUsecase) *CommentController {
 	return &CommentController{
-		eventEndpoint: eventEndpoint,
-		placeEndpoint: placeEndpoint,
+		eventUsecase: eventUsecase,
+		placeUsecase: placeUsecase,
 	}
 }
 
@@ -55,7 +55,7 @@ func (c *CommentController) getEventComments(ctx *gin.Context) {
 	pageNum, _ := strconv.Atoi(ctx.Param("page"))
 	count, _ := strconv.Atoi(ctx.Param("count"))
 
-	result := c.eventEndpoint.GetComments(id, pageNum, count)
+	result := c.eventUsecase.GetComments(id, pageNum, count)
 	if misc.HandleError(ctx, result.Error, http.StatusNoContent) {
 		return
 	}
@@ -77,7 +77,7 @@ func (c *CommentController) createEventComment(ctx *gin.Context) {
 		return
 	}
 
-	result := c.eventEndpoint.CreateComment(createDto, payload)
+	result := c.eventUsecase.CreateComment(createDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -98,7 +98,7 @@ func (c *CommentController) deleteEventComment(ctx *gin.Context) {
 		return
 	}
 
-	result := c.eventEndpoint.DeleteComment(id, payload)
+	result := c.eventUsecase.DeleteComment(id, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
 		return
 	}
@@ -122,7 +122,7 @@ func (c *CommentController) updateEventComment(ctx *gin.Context) {
 		return
 	}
 
-	result := c.eventEndpoint.UpdateComment(id, updateDto, payload)
+	result := c.eventUsecase.UpdateComment(id, updateDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
 		return
 	}
@@ -141,7 +141,7 @@ func (c *CommentController) getPlaceComments(ctx *gin.Context) {
 	pageNum, _ := strconv.Atoi(ctx.Param("page"))
 	count, _ := strconv.Atoi(ctx.Param("count"))
 
-	result := c.placeEndpoint.GetComments(id, pageNum, count)
+	result := c.placeUsecase.GetComments(id, pageNum, count)
 	if misc.HandleError(ctx, result.Error, http.StatusNoContent) {
 		return
 	}
@@ -163,7 +163,7 @@ func (c *CommentController) createPlaceComment(ctx *gin.Context) {
 		return
 	}
 
-	result := c.placeEndpoint.CreateComment(createDto, payload)
+	result := c.placeUsecase.CreateComment(createDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
 	}
@@ -184,7 +184,7 @@ func (c *CommentController) deletePlaceComment(ctx *gin.Context) {
 		return
 	}
 
-	result := c.placeEndpoint.DeleteComment(id, payload)
+	result := c.placeUsecase.DeleteComment(id, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
 		return
 	}
@@ -208,7 +208,7 @@ func (c *CommentController) updatePlaceComment(ctx *gin.Context) {
 		return
 	}
 
-	result := c.placeEndpoint.UpdateComment(id, updateDto, payload)
+	result := c.placeUsecase.UpdateComment(id, updateDto, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusForbidden) {
 		return
 	}

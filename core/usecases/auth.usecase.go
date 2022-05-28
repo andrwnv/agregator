@@ -1,4 +1,4 @@
-package endpoints
+package usecases
 
 import (
 	"github.com/andrwnv/event-aggregator/core"
@@ -7,19 +7,19 @@ import (
 	"github.com/andrwnv/event-aggregator/core/services"
 )
 
-type AuthEndpoint struct {
-	userEndpoint *UserEndpoint
+type AuthUsecase struct {
+	userUsecase *UserUsecase
 }
 
-func NewAuthEndpoint(
-	userEndpoint *UserEndpoint) *AuthEndpoint {
-	return &AuthEndpoint{
-		userEndpoint: userEndpoint,
+func NewAuthUsecase(
+	userUsecase *UserUsecase) *AuthUsecase {
+	return &AuthUsecase{
+		userUsecase: userUsecase,
 	}
 }
 
-func (e *AuthEndpoint) Login(credentials dto.LoginCredentials) Result {
-	user, err := e.userEndpoint.GetFull(dto.BaseUserInfo{
+func (u *AuthUsecase) Login(credentials dto.LoginCredentials) Result {
+	user, err := u.userUsecase.GetFull(dto.BaseUserInfo{
 		Email: credentials.Email,
 	})
 	if err != nil {
@@ -37,5 +37,5 @@ func (e *AuthEndpoint) Login(credentials dto.LoginCredentials) Result {
 		}
 	}
 
-	return Result{nil, MakeEndpointError("Invalid credentials.")}
+	return Result{nil, MakeUsecaseError("Invalid credentials.")}
 }
