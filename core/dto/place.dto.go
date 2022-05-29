@@ -11,7 +11,7 @@ type PlaceDto struct {
 	Latitude    float32      `json:"latitude"`
 	CreatedBy   BaseUserInfo `json:"created_by"`
 	RegionInfo  RegionDto    `json:"region_info"`
-	PlacePhotos []string     `json:"place_photos"`
+	PlacePhotos []string     `json:"photos"`
 }
 
 type CreatePlace struct {

@@ -13,7 +13,7 @@ type EventDto struct {
 	Latitude    float32      `json:"latitude"`
 	CreatedBy   BaseUserInfo `json:"created_by"`
 	RegionInfo  RegionDto    `json:"region_info"`
-	EventPhotos []string     `json:"event_photos"`
+	EventPhotos []string     `json:"photos"`
 }
 
 type CreateEvent struct {
