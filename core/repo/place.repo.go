@@ -75,6 +75,7 @@ func (ev *Place) BeforeDelete(tx *gorm.DB) error {
 type PlaceRepoCrud interface {
 	Create(dto dto.CreatePlace, u User, region Region) (Place, error)
 	Get(id uuid.UUID) (Place, error)
+	GetPlaces(page int, count int) ([]Place, error)
 	Delete(id uuid.UUID) error
 	Update(id uuid.UUID, dto dto.UpdatePlace, region Region) error
 }
@@ -89,6 +90,18 @@ func NewPlaceRepo(repo *PgRepo) *PlaceRepo {
 	return &PlaceRepo{
 		repo: repo,
 	}
+}
+
+func (repo *PlaceRepo) GetPlaces(page int, count int) (places []Place, err error) {
+	switch {
+	case count > 15:
+		count = 15
+	case count <= 0:
+		count = 15
+	}
+	offset := (page - 1) * count
+
+	return places, repo.repo.Database.Preload("CreatedBy").Preload("Region").Offset(offset).Limit(count).Find(&places).Error
 }
 
 func (repo *PlaceRepo) Create(dto dto.CreatePlace, u User, region Region) (Place, error) {

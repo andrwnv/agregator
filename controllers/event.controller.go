@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 )
 
 type EventController struct {
@@ -28,6 +29,7 @@ func (c *EventController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 	group := rootGroup.Group("/event")
 	{
 		group.GET("/:id", c.get)
+		group.GET("/consume/:page/:count", c.getEvents)
 		group.POST("/create", middleware.AuthorizeJWTMiddleware(), c.create)
 		group.PATCH("/update/:event_id", middleware.AuthorizeJWTMiddleware(), c.update)
 		group.DELETE("/delete/:event_id", middleware.AuthorizeJWTMiddleware(), c.delete)
@@ -45,6 +47,20 @@ func (c *EventController) get(ctx *gin.Context) {
 
 	result := c.usecase.Get(id)
 	if misc.HandleError(ctx, result.Error, http.StatusNotFound) {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result.Value,
+	})
+}
+
+func (c *EventController) getEvents(ctx *gin.Context) {
+	pageNum, _ := strconv.Atoi(ctx.Param("page"))
+	count, _ := strconv.Atoi(ctx.Param("count"))
+
+	result := c.usecase.GetEvents(pageNum, count)
+	if misc.HandleError(ctx, result.Error, http.StatusNoContent) {
 		return
 	}
 

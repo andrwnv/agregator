@@ -37,6 +37,21 @@ func (u *EventUsecase) GetFullEventComment(id uuid.UUID) (repo.EventComment, err
 	return u.eventRepo.GetCommentByID(id)
 }
 
+func (u *EventUsecase) GetEvents(page int, count int) Result {
+	places, err := u.eventRepo.GetEvents(page, count)
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Places not found.")}
+	}
+
+	var result []dto.EventDto
+	for _, value := range places {
+		eventPhotos, _ := u.eventRepo.GetImages(value.ID)
+		result = append(result, repo.EventToEvent(value, eventPhotos))
+	}
+
+	return Result{result, nil}
+}
+
 func (u *EventUsecase) Create(createDto dto.CreateEvent, userInfo dto.BaseUserInfo) Result {
 	user, err := u.userUsecase.GetFull(userInfo)
 	if err != nil {

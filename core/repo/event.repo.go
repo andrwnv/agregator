@@ -77,6 +77,7 @@ func (ev *Event) BeforeDelete(tx *gorm.DB) error {
 type EventRepoCrud interface {
 	Create(dto dto.CreateEvent, u User, region Region) (Event, error)
 	Get(id uuid.UUID) (Event, error)
+	GetEvents(page int, count int) ([]Place, error)
 	Delete(id uuid.UUID) error
 	Update(id uuid.UUID, dto dto.UpdateEvent, region Region) error
 }
@@ -115,6 +116,18 @@ func (repo *EventRepo) Create(dto dto.CreateEvent, user User, region Region) (Ev
 
 func (repo *EventRepo) Get(id uuid.UUID) (event Event, err error) {
 	return event, repo.repo.Database.Preload("CreatedBy").Preload("Region").Where("id = ?", id).First(&event).Error
+}
+
+func (repo *EventRepo) GetEvents(page int, count int) (events []Event, err error) {
+	switch {
+	case count > 15:
+		count = 15
+	case count <= 0:
+		count = 15
+	}
+	offset := (page - 1) * count
+
+	return events, repo.repo.Database.Preload("CreatedBy").Preload("Region").Offset(offset).Limit(count).Find(&events).Error
 }
 
 func (repo *EventRepo) Delete(id uuid.UUID) error {

@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 )
 
 type PlaceController struct {
@@ -28,6 +29,7 @@ func (c *PlaceController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 	group := rootGroup.Group("/place")
 	{
 		group.GET("/:id", c.get)
+		group.GET("/consume/:page/:count", c.getPlaces)
 		group.POST("/create", middleware.AuthorizeJWTMiddleware(), c.create)
 		group.PATCH("/update/:place_id", middleware.AuthorizeJWTMiddleware(), c.update)
 		group.DELETE("/delete/:place_id", middleware.AuthorizeJWTMiddleware(), c.delete)
@@ -45,6 +47,20 @@ func (c *PlaceController) get(ctx *gin.Context) {
 
 	result := c.usecase.Get(id)
 	if misc.HandleError(ctx, result.Error, http.StatusNotFound) {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result.Value,
+	})
+}
+
+func (c *PlaceController) getPlaces(ctx *gin.Context) {
+	pageNum, _ := strconv.Atoi(ctx.Param("page"))
+	count, _ := strconv.Atoi(ctx.Param("count"))
+
+	result := c.usecase.GetPlaces(pageNum, count)
+	if misc.HandleError(ctx, result.Error, http.StatusNoContent) {
 		return
 	}
 

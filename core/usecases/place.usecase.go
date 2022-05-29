@@ -29,6 +29,21 @@ func (u *PlaceUsecase) Get(id uuid.UUID) Result {
 	return Result{repo.PlaceToPlace(place, placePhotos), err}
 }
 
+func (u *PlaceUsecase) GetPlaces(page int, count int) Result {
+	places, err := u.placeRepo.GetPlaces(page, count)
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Places not found.")}
+	}
+
+	var result []dto.PlaceDto
+	for _, value := range places {
+		placePhotos, _ := u.placeRepo.GetImages(value.ID)
+		result = append(result, repo.PlaceToPlace(value, placePhotos))
+	}
+
+	return Result{result, nil}
+}
+
 func (u *PlaceUsecase) GetFullPlace(id uuid.UUID) (repo.Place, error) {
 	return u.placeRepo.Get(id)
 }
