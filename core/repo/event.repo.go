@@ -99,7 +99,7 @@ func (repo *EventRepo) Create(dto dto.CreateEvent, user User, region Region) (Ev
 		ID:              uuid.New(),
 		BeginDate:       time.Unix(dto.BeginDate, 0),
 		EndDate:         time.Unix(dto.EndDate, 0),
-		PaymentRequired: dto.PaymentRequired,
+		PaymentRequired: dto.PaymentNeed,
 		CreatedByID:     user.ID,
 		Title:           dto.Title,
 		Description:     dto.Description,
@@ -142,7 +142,7 @@ func (repo *EventRepo) Update(id uuid.UUID, dto dto.UpdateEvent, region Region) 
 
 	event.BeginDate = time.Unix(dto.BeginDate, 0)
 	event.EndDate = time.Unix(dto.EndDate, 0)
-	event.PaymentRequired = dto.PaymentRequired
+	event.PaymentRequired = dto.PaymentNeed
 	event.Title = dto.Title
 	event.Description = dto.Description
 	event.Longitude = dto.Longitude
@@ -232,30 +232,30 @@ func (repo *EventRepo) UpdateComment(commentId uuid.UUID, updateDto dto.UpdateEv
 
 func EventToEvent(event Event, photoUrls []string) dto.EventDto {
 	return dto.EventDto{
-		ID:              event.ID,
-		BeginDate:       event.BeginDate.Unix(),
-		EndDate:         event.EndDate.Unix(),
-		PaymentRequired: event.PaymentRequired,
-		Title:           event.Title,
-		Description:     event.Description,
-		Longitude:       event.Longitude,
-		Latitude:        event.Latitude,
-		CreatedBy:       UserToBaseUser(event.CreatedBy),
-		RegionInfo:      RegionToRegion(event.Region),
-		EventPhotos:     photoUrls,
+		ID:          event.ID,
+		BeginDate:   event.BeginDate.Unix(),
+		EndDate:     event.EndDate.Unix(),
+		PaymentNeed: event.PaymentRequired,
+		Title:       event.Title,
+		Description: event.Description,
+		Longitude:   event.Longitude,
+		Latitude:    event.Latitude,
+		CreatedBy:   UserToBaseUser(event.CreatedBy),
+		RegionInfo:  RegionToRegion(event.Region),
+		EventPhotos: photoUrls,
 	}
 }
 
 func EventToUpdateEvent(event Event) dto.UpdateEvent {
 	return dto.UpdateEvent{
-		BeginDate:       event.BeginDate.Unix(),
-		EndDate:         event.EndDate.Unix(),
-		PaymentRequired: event.PaymentRequired,
-		Title:           event.Title,
-		Description:     event.Description,
-		Longitude:       event.Longitude,
-		Latitude:        event.Latitude,
-		RegionID:        event.Region.RegionShortName,
+		BeginDate:   event.BeginDate.Unix(),
+		EndDate:     event.EndDate.Unix(),
+		PaymentNeed: event.PaymentRequired,
+		Title:       event.Title,
+		Description: event.Description,
+		Longitude:   event.Longitude,
+		Latitude:    event.Latitude,
+		RegionID:    event.Region.RegionShortName,
 	}
 }
 

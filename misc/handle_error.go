@@ -16,6 +16,7 @@ func HandleError(ctx *gin.Context, err error, status int, text ...string) bool {
 				"error": text[0],
 			})
 		}
+		ReportWarning(err.Error())
 	}
 	return haveError
 }

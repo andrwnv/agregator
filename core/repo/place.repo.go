@@ -135,7 +135,7 @@ func (repo *PlaceRepo) Update(id uuid.UUID, dto dto.UpdatePlace, region Region) 
 		return err
 	}
 
-	place.PaymentRequired = dto.PaymentRequired
+	place.PaymentRequired = dto.PaymentNeed
 	place.Title = dto.Title
 	place.Description = dto.Description
 	place.Longitude = dto.Longitude
@@ -225,26 +225,26 @@ func (repo *PlaceRepo) UpdateComment(commentId uuid.UUID, updateDto dto.UpdatePl
 
 func PlaceToPlace(place Place, photoUrls []string) dto.PlaceDto {
 	return dto.PlaceDto{
-		ID:              place.ID,
-		PaymentRequired: place.PaymentRequired,
-		Title:           place.Title,
-		Description:     place.Description,
-		Longitude:       place.Longitude,
-		Latitude:        place.Latitude,
-		CreatedBy:       UserToBaseUser(place.CreatedBy),
-		RegionInfo:      RegionToRegion(place.Region),
-		PlacePhotos:     photoUrls,
+		ID:          place.ID,
+		PaymentNeed: place.PaymentRequired,
+		Title:       place.Title,
+		Description: place.Description,
+		Longitude:   place.Longitude,
+		Latitude:    place.Latitude,
+		CreatedBy:   UserToBaseUser(place.CreatedBy),
+		RegionInfo:  RegionToRegion(place.Region),
+		PlacePhotos: photoUrls,
 	}
 }
 
 func PlaceToUpdatePlace(place Place) dto.UpdatePlace {
 	return dto.UpdatePlace{
-		PaymentRequired: place.PaymentRequired,
-		Title:           place.Title,
-		Description:     place.Description,
-		Longitude:       place.Longitude,
-		Latitude:        place.Latitude,
-		RegionID:        place.Region.RegionShortName,
+		PaymentNeed: place.PaymentRequired,
+		Title:       place.Title,
+		Description: place.Description,
+		Longitude:   place.Longitude,
+		Latitude:    place.Latitude,
+		RegionID:    place.Region.RegionShortName,
 	}
 }
 
