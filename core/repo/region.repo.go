@@ -34,7 +34,7 @@ func NewRegionRepo(repo *PgRepo) *RegionRepo {
 			"RU": "Russian Federation",
 		},
 	}
-	rep.initBaseRegions()
+	//rep.initBaseRegions()
 
 	return rep
 }
