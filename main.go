@@ -53,6 +53,7 @@ func init() {
 		controllers.NewCommentController(eventUsecase, placeUsecase),
 		controllers.NewUserStoryController(storyUsecase, fileCtrl),
 		controllers.NewLikeController(likeUsecase),
+		controllers.NewRegionController(regionRepo),
 	)
 
 	core.SERVER = &core.Server{

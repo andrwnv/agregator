@@ -22,6 +22,11 @@ type RegionRepo struct {
 	regions map[string]string
 }
 
+type RegionDto struct {
+	RegionName      string `json:"region_name" binding:"required"`
+	RegionShortName string `json:"region_short_name" binding:"required"`
+}
+
 func NewRegionRepo(repo *PgRepo) *RegionRepo {
 	_ = repo.Database.AutoMigrate(&Region{})
 
@@ -34,7 +39,7 @@ func NewRegionRepo(repo *PgRepo) *RegionRepo {
 			"RU": "Russian Federation",
 		},
 	}
-	rep.initBaseRegions()
+	//rep.initBaseRegions()
 
 	return rep
 }
@@ -47,6 +52,23 @@ func (r *RegionRepo) GetByRegionID(regionID string) (region Region, err error) {
 func (r *RegionRepo) GetByRegionName(regionName string) (region Region, err error) {
 	err = r.repo.Database.Where(&Region{RegionName: regionName}).First(&region).Error
 	return region, err
+}
+
+func (r *RegionRepo) CreateRegion(dto RegionDto) (region Region) {
+	region = Region{
+		ID:              uuid.New(),
+		RegionName:      dto.RegionName,
+		RegionShortName: dto.RegionShortName,
+	}
+
+	createErr := r.repo.Database.Create(&region).Error
+
+	if createErr != nil {
+		misc.ReportCritical("Cant get info from db")
+		return
+	}
+
+	return region
 }
 
 func (r *RegionRepo) initBaseRegions() {
