@@ -25,6 +25,7 @@ func (c *LikeController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 	group := rootGroup.Group("/likes")
 	{
 		group.GET("/", middleware.AuthorizeJWTMiddleware(), c.get)
+		group.GET("/is_liked/:id", middleware.AuthorizeJWTMiddleware(), c.isLiked)
 		group.POST("/like", middleware.AuthorizeJWTMiddleware(), c.like)
 		group.DELETE("/dislike/:id", middleware.AuthorizeJWTMiddleware(), c.dislike)
 	}
@@ -50,6 +51,27 @@ func (c *LikeController) get(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"result": result.Value,
+	})
+}
+
+func (c *LikeController) isLiked(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if misc.HandleError(ctx, err, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	payload, extractErr := misc.ExtractJwtPayload(ctx)
+	if misc.HandleError(ctx, extractErr, http.StatusBadRequest) {
+		return
+	}
+
+	result := c.usecase.IsLiked(payload, id)
+	if misc.HandleError(ctx, result.Error, http.StatusInternalServerError) {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result,
 	})
 }
 

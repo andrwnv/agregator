@@ -49,9 +49,17 @@ func (repo *LikedRepo) Get(user dto.BaseUserInfo, page int, count int) (likedLis
 		Offset(offset).Limit(count).Where("user_id = ?", user.ID).Find(&likedList).Error
 }
 
+func (repo *LikedRepo) IsLiked(user User, id uuid.UUID) (bool, error) {
+	var result []Liked
+	err := repo.repo.Database.Where("user_id = ?", user.ID).Where("event_id = ?", id).
+		Or("place_id = ?", id).Find(&result).Error
+	return len(result) != 0, err
+}
+
 func (repo *LikedRepo) Dislike(user User, id uuid.UUID) error {
 	like := Liked{}
-	repo.repo.Database.Where("event_id = ?", id).Or("place_id = ?", id).Take(&like)
+	repo.repo.Database.Where("user_id = ?", user.ID).Where("event_id = ?", id).
+		Or("place_id = ?", id).Take(&like)
 	return repo.repo.Database.Unscoped().Delete(&like).Error
 }
 

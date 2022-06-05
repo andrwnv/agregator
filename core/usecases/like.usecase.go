@@ -40,6 +40,19 @@ func (u *LikeUsecase) Get(userInfo dto.BaseUserInfo, page int, count int) Result
 	return Result{result, nil}
 }
 
+func (u *LikeUsecase) IsLiked(userInfo dto.BaseUserInfo, id uuid.UUID) Result {
+	user, err := u.userUsecase.GetFull(userInfo)
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Cant find user for like something.")}
+	}
+	result, err := u.likedRepo.IsLiked(user, id)
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Something went wrong!")}
+	}
+
+	return Result{result, nil}
+}
+
 func (u *LikeUsecase) Like(like dto.LikeDto, userInfo dto.BaseUserInfo) Result {
 	user, err := u.userUsecase.GetFull(userInfo)
 	if err != nil {
