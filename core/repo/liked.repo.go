@@ -50,7 +50,9 @@ func (repo *LikedRepo) Get(user dto.BaseUserInfo, page int, count int) (likedLis
 }
 
 func (repo *LikedRepo) Dislike(user User, id uuid.UUID) error {
-	return repo.repo.Database.Unscoped().Delete(&Liked{ID: id, UserID: user.ID}).Error
+	like := Liked{}
+	repo.repo.Database.Where("event_id = ?", id).Or("place_id = ?", id).Take(&like)
+	return repo.repo.Database.Unscoped().Delete(&like).Error
 }
 
 func (repo *LikedRepo) LikeEvent(user User, event Event) (Liked, error) {
