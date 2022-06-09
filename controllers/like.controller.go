@@ -71,7 +71,7 @@ func (c *LikeController) isLiked(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"result": result,
+		"result": result.Value,
 	})
 }
 

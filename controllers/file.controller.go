@@ -71,7 +71,7 @@ func (c *FileController) GetImage(ctx *gin.Context) {
 	ctx.Header("Content-Type", c.httpContentType[fileExt])
 	ctx.File(targetPath)
 
-	ctx.Status(http.StatusNotModified)
+	ctx.Status(http.StatusOK)
 }
 
 func (c *FileController) UploadAvatar(ctx *gin.Context) {
