@@ -84,7 +84,7 @@ func (repo *UserRepo) Create(dto dto.CreateUser) (user User, err error) {
 }
 
 func (repo *UserRepo) Delete(dto dto.BaseUserInfo) error {
-	return repo.repo.Database.Unscoped().Delete(&User{ID: uuid.MustParse(dto.ID)}).Error
+	return repo.repo.Database.Delete(&User{ID: uuid.MustParse(dto.ID)}).Error
 }
 
 func (repo *UserRepo) GetByEmail(email string) (user User, err error) {
