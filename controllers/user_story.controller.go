@@ -114,7 +114,6 @@ func (c *UserStoryController) create(ctx *gin.Context) {
 		return
 	}
 
-	misc.ReportInfo(createDto.Events[0].String())
 	result := c.usecase.Create(createDto.Content, createDto.Events, createDto.Places, payload)
 	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
 		return
