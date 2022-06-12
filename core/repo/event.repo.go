@@ -208,7 +208,7 @@ func (repo *EventRepo) GetComments(eventId uuid.UUID, page int, count int) (comm
 	offset := (page - 1) * count
 
 	return comments, repo.repo.Database.Preload("CreatedBy").Preload("LinkedEvent").Offset(offset).Limit(count).
-		Where("event_id = ?", eventId).Find(&comments).Error
+		Where("event_id = ?", eventId).Order("created_at DESC").Find(&comments).Error
 }
 
 func (repo *EventRepo) GetCommentByID(commentId uuid.UUID) (comment EventComment, err error) {

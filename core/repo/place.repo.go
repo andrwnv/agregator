@@ -201,7 +201,7 @@ func (repo *PlaceRepo) GetComments(placeId uuid.UUID, page int, count int) (comm
 	offset := (page - 1) * count
 
 	return comments, repo.repo.Database.Preload("CreatedBy").Preload("LinkedPlace").Offset(offset).Limit(count).
-		Where("place_id = ?", placeId).Find(&comments).Error
+		Where("place_id = ?", placeId).Order("created_at DESC").Find(&comments).Error
 }
 
 func (repo *PlaceRepo) GetCommentByID(commentId uuid.UUID) (comment PlaceComment, err error) {
