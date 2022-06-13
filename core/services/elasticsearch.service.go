@@ -79,7 +79,7 @@ func NewEsService() *EsService {
 
 func (es *EsService) Create(createDto dto.CreateAggregatorRecordDto) (err error) {
 	if serialized, err := json.Marshal(createDto); err == nil {
-		_, createErr := es.client.Create(es.indexName, uuid.New().String(), strings.NewReader(string(serialized)))
+		_, createErr := es.client.Create(es.indexName, createDto.ID.String(), strings.NewReader(string(serialized)))
 		return createErr
 	}
 	return err
@@ -99,7 +99,7 @@ func (es *EsService) Update(id uuid.UUID, updateDto dto.UpdateAggregatorRecordDt
 }
 
 func (es *EsService) SearchNearby(userLocation dto.LocationDto, from int, limitSize int) ([]dto.AggregatorRecordDto, error) {
-	exp := 0.1
+	var exp float32 = 0.1
 
 	topLeftLocation := userLocation
 	bottomRightLocation := userLocation
@@ -154,7 +154,8 @@ func (es *EsService) SearchNearby(userLocation dto.LocationDto, from int, limitS
 	var result []dto.AggregatorRecordDto
 	if hitsList, ok := hits.([]interface{}); ok {
 		for _, hitInfo := range hitsList {
-			if j, marshalErr := json.Marshal(hitInfo.(map[string]interface{})); marshalErr != nil {
+			j, marshalErr := json.Marshal(hitInfo.(map[string]interface{}))
+			if marshalErr == nil {
 				var item dto.AggregatorRecordElasticDto
 				unmarshalErr := json.Unmarshal(j, &item)
 				if unmarshalErr == nil {
@@ -168,6 +169,88 @@ func (es *EsService) SearchNearby(userLocation dto.LocationDto, from int, limitS
 			}
 		}
 	}
+
+	return result, nil
+}
+
+func (es *EsService) Search(title string, objectType string, from int, limitSize int) ([]dto.AggregatorRecordDto, error) {
+	type ShouldType struct {
+		Term []map[string]interface{}
+	}
+
+	type MustType struct {
+		Must []map[string]interface{}
+	}
+
+	mustQuery := []map[string]interface{}{
+		{
+			"match": map[string]interface{}{
+				"location_name": title,
+			},
+		},
+		{
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					{
+						"match": map[string]interface{}{
+							"location_type": objectType,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	query := map[string]interface{}{
+		"from": from * limitSize,
+		"size": limitSize,
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": mustQuery,
+			},
+		},
+	}
+
+	buffer, err := json.Marshal(query)
+	if err != nil {
+		return []dto.AggregatorRecordDto{}, err
+	}
+
+	response, err := es.client.Search(
+		es.client.Search.WithIndex(es.indexName),
+		es.client.Search.WithBody(strings.NewReader(string(buffer))),
+		es.client.Search.WithPretty(),
+	)
+	defer response.Body.Close()
+
+	if err != nil || response.IsError() {
+		return []dto.AggregatorRecordDto{}, err
+	}
+
+	// extract [hits][hits]
+	jsonResult, _ := readerToMapInterface(response.Body)
+	hits := jsonResult["hits"].(map[string]interface{})["hits"]
+
+	// convert hits to dto
+	var result []dto.AggregatorRecordDto
+	if hitsList, ok := hits.([]interface{}); ok {
+		for _, hitInfo := range hitsList {
+			if j, marshalErr := json.Marshal(hitInfo.(map[string]interface{})); marshalErr == nil {
+				var item dto.AggregatorRecordElasticDto
+				unmarshalErr := json.Unmarshal(j, &item)
+				if unmarshalErr == nil {
+					result = append(result, dto.AggregatorRecordDto{
+						ID:           item.ID,
+						LocationName: item.AggregatorRecordDto.LocationName,
+						Location:     item.AggregatorRecordDto.Location,
+						LocationType: item.AggregatorRecordDto.LocationType,
+					})
+				}
+			}
+		}
+	}
+
+	fmt.Println(result)
 
 	return result, nil
 }

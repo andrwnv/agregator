@@ -3,6 +3,7 @@ package usecases
 import (
 	"github.com/andrwnv/event-aggregator/core/dto"
 	"github.com/andrwnv/event-aggregator/core/repo"
+	"github.com/andrwnv/event-aggregator/core/services"
 	"github.com/google/uuid"
 )
 
@@ -10,16 +11,19 @@ type EventUsecase struct {
 	eventRepo   *repo.EventRepo
 	userUsecase *UserUsecase
 	regionRepo  *repo.RegionRepo
+	esService   *services.EsService
 }
 
 func NewEventUsecase(
 	eventRepo *repo.EventRepo,
 	userUsecase *UserUsecase,
-	regionRepo *repo.RegionRepo) *EventUsecase {
+	regionRepo *repo.RegionRepo,
+	esService *services.EsService) *EventUsecase {
 	return &EventUsecase{
 		eventRepo:   eventRepo,
 		userUsecase: userUsecase,
 		regionRepo:  regionRepo,
+		esService:   esService,
 	}
 }
 
@@ -66,6 +70,16 @@ func (u *EventUsecase) Create(createDto dto.CreateEvent, userInfo dto.BaseUserIn
 	// TODO: check begin, end datetime correctness for upd & create
 
 	event, err := u.eventRepo.Create(createDto, user, region)
+	err = u.esService.Create(dto.CreateAggregatorRecordDto{
+		ID:           event.ID,
+		LocationName: createDto.Title,
+		Location: dto.LocationDto{
+			Lat: createDto.Latitude,
+			Lon: createDto.Longitude,
+		},
+		LocationType: "event",
+	})
+
 	return Result{repo.EventToEvent(event, []string{}), err}
 }
 
@@ -87,6 +101,15 @@ func (u *EventUsecase) Update(id uuid.UUID, updateDto dto.UpdateEvent, userInfo 
 	// TODO: check begin, end datetime correctness for upd & create
 
 	err = u.eventRepo.Update(event.ID, updateDto, event.Region)
+	err = u.esService.Update(event.ID, dto.UpdateAggregatorRecordDto{
+		LocationName: updateDto.Title,
+		Location: dto.LocationDto{
+			Lat: updateDto.Latitude,
+			Lon: updateDto.Longitude,
+		},
+		LocationType: "event",
+	})
+
 	return Result{err != nil, err}
 }
 
@@ -101,6 +124,8 @@ func (u *EventUsecase) Delete(id uuid.UUID, userInfo dto.BaseUserInfo) Result {
 	}
 
 	err = u.eventRepo.Delete(id)
+	err = u.esService.Delete(id)
+
 	return Result{err != nil, err}
 }
 

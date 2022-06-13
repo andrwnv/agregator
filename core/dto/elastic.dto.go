@@ -1,13 +1,15 @@
 package dto
 
+import "github.com/google/uuid"
+
 const (
 	EVENT_LOCATION_TYPE = "event"
 	PLACE_LOCATION_TYPE = "place"
 )
 
 type LocationDto struct {
-	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
+	Lat float32 `json:"lat"`
+	Lon float32 `json:"lon"`
 }
 
 type AggregatorRecordDto struct {
@@ -23,6 +25,7 @@ type AggregatorRecordElasticDto struct {
 }
 
 type CreateAggregatorRecordDto struct {
+	ID           uuid.UUID   `json:"id"`
 	LocationName string      `json:"location_name"`
 	Location     LocationDto `json:"location"`
 	LocationType string      `json:"location_type"`

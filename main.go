@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/andrwnv/event-aggregator/controllers"
 	"github.com/andrwnv/event-aggregator/core"
 	"github.com/andrwnv/event-aggregator/core/repo"
@@ -10,12 +14,11 @@ import (
 	"github.com/andrwnv/event-aggregator/misc"
 	v1 "github.com/andrwnv/event-aggregator/routers/v1"
 	"github.com/joho/godotenv"
-	"net/http"
-	"os"
-	"strconv"
 )
 
 func init() {
+	// gin.SetMode(gin.ReleaseMode)
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		misc.ReportCritical("Cant load env variables")
@@ -29,18 +32,22 @@ func init() {
 	userStoryRepo := repo.NewUserStoryRepo(globalRepo)
 	likedRepo := repo.NewLikedRepo(globalRepo)
 
+	es := services.NewEsService()
 	mailer := services.MakeMailer(
 		os.Getenv("SMTP_HOST"),
 		os.Getenv("SMTP_PORT"),
 		os.Getenv("SMTP_PASSWORD"),
 		os.Getenv("SMTP_USER"))
 
+	//es.Search("Тест событие", "place", 0, 100)
+
 	userUsecase := usecases.NewUserUsecase(userRepo, mailer)
-	eventUsecase := usecases.NewEventUsecase(eventRepo, userUsecase, regionRepo)
-	placeUsecase := usecases.NewPlaceUsecase(placeRepo, userUsecase, regionRepo)
+	eventUsecase := usecases.NewEventUsecase(eventRepo, userUsecase, regionRepo, es)
+	placeUsecase := usecases.NewPlaceUsecase(placeRepo, userUsecase, regionRepo, es)
 	authUsecase := usecases.NewAuthUsecase(userUsecase)
 	storyUsecase := usecases.NewUserStoryUsecase(userStoryRepo, userUsecase, eventUsecase, placeUsecase)
 	likeUsecase := usecases.NewLikeUsecase(likedRepo, userUsecase, eventUsecase, placeUsecase)
+	searchUsecase := usecases.NewSearchUsecase(placeRepo, eventRepo, es)
 
 	fileCtrl := controllers.NewFileController(os.Getenv("FILE_STORAGE_PATH"), userUsecase)
 
@@ -53,6 +60,7 @@ func init() {
 		controllers.NewCommentController(eventUsecase, placeUsecase),
 		controllers.NewUserStoryController(storyUsecase, fileCtrl),
 		controllers.NewLikeController(likeUsecase),
+		controllers.NewSearchController(searchUsecase),
 	)
 
 	core.SERVER = &core.Server{
