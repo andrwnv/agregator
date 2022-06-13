@@ -9,8 +9,8 @@ type EventDto struct {
 	PaymentNeed bool         `json:"payment_need"`
 	Title       string       `json:"title"`
 	Description string       `json:"description"`
-	Longitude   float32      `json:"longitude"`
-	Latitude    float32      `json:"latitude"`
+	Longitude   float64      `json:"longitude"`
+	Latitude    float64      `json:"latitude"`
 	CreatedBy   BaseUserInfo `json:"created_by"`
 	RegionInfo  RegionDto    `json:"region_info"`
 	EventPhotos []string     `json:"photos"`
@@ -22,8 +22,8 @@ type CreateEvent struct {
 	PaymentNeed bool    `json:"payment_need"`
 	Title       string  `json:"title" binding:"required"`
 	Description string  `json:"description" binding:"required"`
-	Longitude   float32 `json:"longitude" binding:"required"`
-	Latitude    float32 `json:"latitude" binding:"required"`
+	Longitude   float64 `json:"longitude" binding:"required"`
+	Latitude    float64 `json:"latitude" binding:"required"`
 	RegionID    string  `json:"region_id" binding:"required"`
 }
 
@@ -33,7 +33,7 @@ type UpdateEvent struct {
 	PaymentNeed bool    `json:"payment_need"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
-	Longitude   float32 `json:"longitude"`
-	Latitude    float32 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	Latitude    float64 `json:"latitude"`
 	RegionID    string  `json:"region_id"`
 }

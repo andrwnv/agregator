@@ -17,8 +17,8 @@ type Event struct {
 	CreatedByID     uuid.UUID `gorm:"not null"`
 	Title           string    `gorm:"not null"`
 	Description     string    `gorm:"not null"`
-	Longitude       float32   `gorm:"not null"`
-	Latitude        float32   `gorm:"not null"`
+	Longitude       float64   `gorm:"not null"`
+	Latitude        float64   `gorm:"not null"`
 	RegionID        uuid.UUID `gorm:"not null"`
 
 	Region    Region `gorm:"foreignKey:RegionID;references:ID"`

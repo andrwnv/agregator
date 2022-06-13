@@ -67,8 +67,8 @@ func (c *SearchController) searchNearby(ctx *gin.Context) {
 
 	result := c.usecase.SearchNearby(dto.SearchNearbyDto{
 		Coords: dto.LocationDto{
-			Lat: float32(lat),
-			Lon: float32(lon),
+			Lat: lat,
+			Lon: lon,
 		},
 		SearchType: objTypes,
 		From:       uint(from),

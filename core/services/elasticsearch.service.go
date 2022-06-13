@@ -99,7 +99,7 @@ func (es *EsService) Update(id uuid.UUID, updateDto dto.UpdateAggregatorRecordDt
 }
 
 func (es *EsService) SearchNearby(userLocation dto.LocationDto, from int, limitSize int) ([]dto.AggregatorRecordDto, error) {
-	var exp float32 = 0.1
+	var exp float64 = 0.1
 
 	topLeftLocation := userLocation
 	bottomRightLocation := userLocation
