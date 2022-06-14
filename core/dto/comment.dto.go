@@ -20,6 +20,13 @@ type UpdateEventCommentDto struct {
 	CommentBody string `json:"comment_body" binding:"required"`
 }
 
+type EventCommentListDto struct {
+	Page      int64             `json:"page"`
+	ListSize  int64             `json:"size"`
+	TotalSize int64             `json:"total_size"`
+	List      []EventCommentDto `json:"list"`
+}
+
 // ----- Place comments -----
 
 type PlaceCommentDto struct {
@@ -38,4 +45,11 @@ type CreatePlaceCommentDto struct {
 
 type UpdatePlaceCommentDto struct {
 	CommentBody string `json:"comment_body" binding:"required"`
+}
+
+type PlaceCommentListDto struct {
+	Page      int64             `json:"page"`
+	ListSize  int64             `json:"size"`
+	TotalSize int64             `json:"total_size"`
+	List      []PlaceCommentDto `json:"list"`
 }

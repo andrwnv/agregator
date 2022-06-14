@@ -191,6 +191,11 @@ func (repo *PlaceRepo) CreateComment(commentDto dto.CreatePlaceCommentDto, user 
 	return placeComment, repo.repo.Database.Create(&placeComment).Error
 }
 
+func (repo *PlaceRepo) GetTotalCommentsCount() (size int64, err error) {
+	var tmp []PlaceComment
+	return size, repo.repo.Database.Model(&tmp).Count(&size).Error
+}
+
 func (repo *PlaceRepo) GetComments(placeId uuid.UUID, page int, count int) (comments []PlaceComment, err error) {
 	switch {
 	case count > 15:

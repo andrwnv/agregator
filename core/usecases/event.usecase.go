@@ -192,7 +192,17 @@ func (u *EventUsecase) GetComments(eventId uuid.UUID, page int, count int) Resul
 		result = append(result, repo.CommentToComment(value))
 	}
 
-	return Result{result, nil}
+	total, err := u.eventRepo.GetTotalCommentsCount()
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Cant extract total count of event comment.")}
+	}
+
+	return Result{dto.EventCommentListDto{
+		Page:      int64(page),
+		ListSize:  int64(count),
+		TotalSize: total,
+		List:      result,
+	}, nil}
 }
 
 func (u *EventUsecase) DeleteComment(commentId uuid.UUID, userInfo dto.BaseUserInfo) Result {

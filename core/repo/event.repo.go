@@ -198,6 +198,11 @@ func (repo *EventRepo) CreateComment(commentDto dto.CreateEventCommentDto, user 
 	return eventComment, repo.repo.Database.Create(&eventComment).Error
 }
 
+func (repo *EventRepo) GetTotalCommentsCount() (size int64, err error) {
+	var tmp []EventComment
+	return size, repo.repo.Database.Model(&tmp).Count(&size).Error
+}
+
 func (repo *EventRepo) GetComments(eventId uuid.UUID, page int, count int) (comments []EventComment, err error) {
 	switch {
 	case count > 15:

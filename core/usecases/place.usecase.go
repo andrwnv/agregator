@@ -189,7 +189,17 @@ func (u *PlaceUsecase) GetComments(placeId uuid.UUID, page int, count int) Resul
 		result = append(result, repo.CommentToCommentDto(value))
 	}
 
-	return Result{result, nil}
+	total, err := u.placeRepo.GetTotalCommentsCount()
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Cant extract total count of event comment.")}
+	}
+
+	return Result{dto.PlaceCommentListDto{
+		Page:      int64(page),
+		ListSize:  int64(count),
+		TotalSize: total,
+		List:      result,
+	}, nil}
 }
 
 func (u *PlaceUsecase) DeleteComment(commentId uuid.UUID, userInfo dto.BaseUserInfo) Result {
