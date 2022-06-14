@@ -39,6 +39,37 @@ func (e *UserStoryUsecase) Get(id uuid.UUID) Result {
 	return Result{repo.StoryToStory(story, events, places, photos), err}
 }
 
+func (e *UserStoryUsecase) GetPaginated(page int, count int) Result {
+	stories, err := e.userStoryRepo.GetStories(page, count)
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Cant extract stories.")}
+	}
+
+	total, err := e.userStoryRepo.GetTotalCount()
+	if err != nil {
+		return Result{nil, MakeUsecaseError("Cant extract total count of stories.")}
+	}
+
+	var result []dto.ShortStoryInfoDto
+	for _, story := range stories {
+		result = append(result, dto.ShortStoryInfoDto{
+			ID:           story.ID,
+			Title:        story.Title,
+			LongReadText: story.LongReadText,
+		})
+	}
+
+	return Result{
+		Value: dto.ShortStoryListDto{
+			Page:      int64(page),
+			ListSize:  int64(count),
+			TotalSize: total,
+			List:      result,
+		},
+		Error: nil,
+	}
+}
+
 func (e *UserStoryUsecase) Create(
 	createDto dto.CreateUserStoryDto,
 	eventsId []uuid.UUID,

@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 )
 
 type UserStoryController struct {
@@ -29,6 +30,7 @@ func (c *UserStoryController) MakeRoutesV1(rootGroup *gin.RouterGroup) {
 	{
 		//group.GET("/") // query required
 		group.GET("/:id", c.get)
+		group.GET("/paginate/:page/:count", c.getPaginated)
 		group.POST("/create", middleware.AuthorizeJWTMiddleware(), c.create)
 		group.DELETE("/delete/:id", middleware.AuthorizeJWTMiddleware(), c.delete)
 		group.PATCH("/update/:id", middleware.AuthorizeJWTMiddleware(), c.update)
@@ -176,4 +178,25 @@ func (c *UserStoryController) deleteStoryImages(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusNoContent)
+}
+
+func (c *UserStoryController) getPaginated(ctx *gin.Context) {
+	page, pageErr := strconv.Atoi(ctx.Param("page"))
+	count, countErr := strconv.Atoi(ctx.Param("count"))
+
+	if misc.HandleError(ctx, pageErr, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+	if misc.HandleError(ctx, countErr, http.StatusForbidden, "Look like you attacking me.") {
+		return
+	}
+
+	result := c.usecase.GetPaginated(page, count)
+	if misc.HandleError(ctx, result.Error, http.StatusBadRequest) {
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"result": result.Value,
+	})
 }

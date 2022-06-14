@@ -2,6 +2,19 @@ package dto
 
 import "github.com/google/uuid"
 
+type ShortStoryInfoDto struct {
+	ID           uuid.UUID `json:"id"`
+	Title        string    `json:"title"`
+	LongReadText string    `json:"long_read_text"`
+}
+
+type ShortStoryListDto struct {
+	Page      int64               `json:"page"`
+	ListSize  int64               `json:"size"`
+	TotalSize int64               `json:"total_size"`
+	List      []ShortStoryInfoDto `json:"list"`
+}
+
 type UserStoryDto struct {
 	ID           uuid.UUID        `json:"id"`
 	Title        string           `json:"title"`

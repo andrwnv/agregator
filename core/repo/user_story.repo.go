@@ -144,6 +144,11 @@ func (repo *UserStoryRepo) GetStoryByID(id uuid.UUID) (story UserStory, err erro
 	return story, repo.repo.Database.Preload("CreatedBy").Where("id = ?", id).Find(&story).Error
 }
 
+func (repo *UserStoryRepo) GetTotalCount() (size int64, err error) {
+	var tmp []UserStory
+	return size, repo.repo.Database.Model(&tmp).Count(&size).Error
+}
+
 func (repo *UserStoryRepo) GetStories(page int, count int) (stories []UserStory, err error) {
 	switch {
 	case count > 15:
@@ -153,7 +158,7 @@ func (repo *UserStoryRepo) GetStories(page int, count int) (stories []UserStory,
 	}
 	offset := (page - 1) * count
 
-	return stories, repo.repo.Database.Preload("CreatedBy").Offset(offset).Limit(count).Find(&stories).Error
+	return stories, repo.repo.Database.Offset(offset).Limit(count).Find(&stories).Error
 }
 
 func (repo *UserStoryRepo) Update(id uuid.UUID, updateDto dto.UpdateUserStoryDto) error {
