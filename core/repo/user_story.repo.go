@@ -294,6 +294,7 @@ func StoryToStory(
 		LinkedEvents: eventsDto,
 		LinkedPlaces: placesDto,
 		LinkedPhotos: photos,
+		CreatedAt:    story.CreatedAt.Unix(),
 	}
 }
 func StoryToUpdateStory(story UserStory) dto.UpdateUserStoryDto {

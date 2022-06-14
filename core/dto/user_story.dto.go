@@ -10,6 +10,7 @@ type UserStoryDto struct {
 	LinkedEvents []LinkedEventDto `json:"linked_events"`
 	LinkedPlaces []LinkedPlaceDto `json:"linked_places"`
 	LinkedPhotos []string         `json:"linked_photos"`
+	CreatedAt    int64            `json:"created_at"`
 }
 
 type CreateUserStoryWithLinksDto struct {
